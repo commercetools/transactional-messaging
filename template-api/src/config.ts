@@ -1,4 +1,5 @@
 import CustomError from './errors/custom.error';
+import { isAllowedServiceUrl } from './utils/service-origin';
 
 export type Configuration = {
   projectKey: string;
@@ -37,7 +38,7 @@ const fail = (message: string, problems: string[]): never => {
 const originOf = (url: string): string | undefined => {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'https:' ? parsed.origin : undefined;
+    return isAllowedServiceUrl(parsed) ? parsed.origin : undefined;
   } catch {
     return undefined;
   }
@@ -101,7 +102,7 @@ export const readServiceConfiguration = (
   const audience = publicUrl ? originOf(publicUrl) : undefined;
   if (!audience) {
     problems.push(
-      'CONNECT_SERVICE_URL (or TEMPLATE_API_PUBLIC_URL) must be an https URL'
+      'CONNECT_SERVICE_URL (or TEMPLATE_API_PUBLIC_URL) must be an https URL, or http://localhost for local development'
     );
   }
 

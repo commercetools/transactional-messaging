@@ -1,4 +1,5 @@
 import type { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk';
+import { isAllowedServiceUrl } from '../utils/service-origin';
 
 /** The Merchant Center app reads this object to find the service. Keep both in step with notification-manager. */
 export const CONFIG_CONTAINER = 'transactional-messaging';
@@ -13,8 +14,10 @@ export const normaliseServiceUrl = (value: string | undefined): string => {
   } catch {
     throw new Error('CONNECT_SERVICE_URL is not a valid URL');
   }
-  if (url.protocol !== 'https:')
-    throw new Error('CONNECT_SERVICE_URL must use https');
+  if (!isAllowedServiceUrl(url))
+    throw new Error(
+      'CONNECT_SERVICE_URL must use https (http is allowed only for localhost)'
+    );
   return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
 };
 

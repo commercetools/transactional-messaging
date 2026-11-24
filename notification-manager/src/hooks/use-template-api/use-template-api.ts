@@ -3,6 +3,7 @@ import { useCustomObjectFetcher } from '../use-custom-object-connector/use-custo
 import { createTemplateApi, type TemplateApi } from '../../api/template-api';
 import { SERVICE_CONFIG_CONTAINER, SERVICE_CONFIG_KEY } from '../../constants';
 import { getErrorMessage } from '../../helpers';
+import { urlOf } from './service-url';
 
 export type TemplateApiState =
   | { status: 'loading' }
@@ -10,13 +11,6 @@ export type TemplateApiState =
   | { status: 'missing' }
   | { status: 'error'; message: string }
   | { status: 'ready'; api: TemplateApi };
-
-const urlOf = (value: unknown): string | undefined => {
-  const url = (value as { url?: unknown } | null | undefined)?.url;
-  return typeof url === 'string' && url.startsWith('https://')
-    ? url
-    : undefined;
-};
 
 /** Finds the template service the connector registered and returns a client for it. */
 export const useTemplateApi = (): TemplateApiState => {

@@ -32,6 +32,26 @@ describe('readServiceConfiguration', () => {
   });
 
   it.each([
+    'http://localhost:8080/templateApi',
+    'http://127.0.0.1:8080',
+    'http://[::1]:8080',
+  ])('accepts %s for local development', (url) => {
+    expect(
+      readServiceConfiguration({ ...service, TEMPLATE_API_PUBLIC_URL: url })
+        .audience
+    ).toBe(new URL(url).origin);
+  });
+
+  it('still rejects http for a remote host', () => {
+    expect(() =>
+      readServiceConfiguration({
+        ...service,
+        TEMPLATE_API_PUBLIC_URL: 'http://templates.example.com',
+      })
+    ).toThrow();
+  });
+
+  it.each([
     ['SENDGRID_API_KEY', { SENDGRID_API_KEY: '' }],
     ['SENDGRID_API_KEY', { SENDGRID_API_KEY: 'nope' }],
     ['SENDGRID_DATA_RESIDENCY', { SENDGRID_DATA_RESIDENCY: 'mars' }],
@@ -92,5 +112,11 @@ describe('normaliseServiceUrl', () => {
     expect(() => normaliseServiceUrl(undefined)).toThrow('not set');
     expect(() => normaliseServiceUrl('nope')).toThrow('not a valid URL');
     expect(() => normaliseServiceUrl('http://s.example.com')).toThrow('https');
+  });
+
+  it('allows http for localhost only', () => {
+    expect(normaliseServiceUrl('http://localhost:8080/templateApi/')).toBe(
+      'http://localhost:8080/templateApi'
+    );
   });
 });

@@ -14,8 +14,8 @@ const app = createApp(
   })
 );
 
-// Connect runs service applications on port 8080.
-const PORT = 8080;
+// Connect runs service applications on port 8080. PORT only matters for local development.
+const PORT = Number(process.env.PORT) || 8080;
 const server = app.listen(PORT, () => {
   logger.info(`Template API listening on port ${PORT}`);
 });
