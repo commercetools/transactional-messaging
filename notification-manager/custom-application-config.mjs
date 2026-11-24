@@ -37,6 +37,12 @@ const config = {
     view: ['view_key_value_documents'],
     manage: ['manage_key_value_documents'],
   },
+  headers: {
+    csp: {
+      'connect-src': [],
+      'script-src': ["'unsafe-inline'", "'unsafe-eval'"],
+    },
+  },
   icon: '${path:@commercetools-frontend/assets/application-icons/rocket.svg}',
   mainMenuLink: {
     defaultLabel: 'Transactional messaging',
