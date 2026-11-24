@@ -1,0 +1,6 @@
+i18n/data/*.json
+public
+.cache
+.yarn
+src/shared
+src/templates/defaults-email.ts

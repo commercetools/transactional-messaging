@@ -1,0 +1,109 @@
+deployAs:
+  - name: notification-sender
+    applicationType: event
+    endpoint: /notificationSender
+    scripts:
+      postDeploy: npm install && npm run build && npm run connector:post-deploy
+      preUndeploy: npm install && npm run build && npm run connector:pre-undeploy
+    configuration:
+      standardConfiguration:
+        - key: DEFAULT_LOCALE
+          description: Locale used when neither the customer nor the order has one (for example en-US). Used to format dates and prices.
+          required: true
+          default: en-US
+        - key: SENDER_EMAIL_ADDRESS
+          description: Verified sender address in Twilio SendGrid. Required to enable the email channel.
+          required: false
+        - key: SENDGRID_DATA_RESIDENCY
+          description: "global (default) or eu, for SendGrid EU regional subusers."
+          required: false
+          default: global
+        - key: TWILIO_ACCOUNT_SID
+          description: Twilio Account SID (AC…). Required to enable the SMS channel.
+          required: false
+        - key: TWILIO_MESSAGING_SERVICE_SID
+          description: Twilio Messaging Service SID (MG…). Recommended sender for SMS. Either this or TWILIO_FROM_NUMBER is required for SMS.
+          required: false
+        - key: TWILIO_FROM_NUMBER
+          description: Sender phone number in E.164 format (+15551234567), used when no Messaging Service is configured.
+          required: false
+        - key: SMS_CONSENT_CUSTOM_FIELD
+          description: Optional name of a boolean Custom Field on Customer (or Order, for guests). When set, SMS is only sent if the field is true.
+          required: false
+        - key: CUSTOMER_REGISTRATION_TEMPLATE_ID
+          description: Optional fallback SendGrid template ID when no email template is configured in the Merchant Center.
+          required: false
+        - key: CUSTOMER_PASSWORD_TOKEN_CREATION_TEMPLATE_ID
+          description: Optional fallback SendGrid template ID (password reset).
+          required: false
+        - key: ORDER_CONFIRMATION_TEMPLATE_ID
+          description: Optional fallback SendGrid template ID (order confirmation).
+          required: false
+        - key: ORDER_STATE_CHANGE_TEMPLATE_ID
+          description: Optional fallback SendGrid template ID (order status update).
+          required: false
+        - key: SHIPMENT_STATE_CHANGE_TEMPLATE_ID
+          description: Optional fallback SendGrid template ID (shipping update).
+          required: false
+        - key: ORDER_REFUND_TEMPLATE_ID
+          description: Optional fallback SendGrid template ID (return / refund).
+          required: false
+      securedConfiguration:
+        - key: SENDGRID_API_KEY
+          description: Twilio SendGrid API key. Needs mail.send for the email channel and templates.read for the SMS channel, because SMS texts are SendGrid templates. Required to enable email or SMS.
+          required: false
+        - key: TWILIO_API_KEY_SID
+          description: Twilio API Key SID (SK…). Required to enable the SMS channel.
+          required: false
+        - key: TWILIO_API_KEY_SECRET
+          description: Twilio API Key secret. Required to enable the SMS channel.
+          required: false
+  - name: template-api
+    applicationType: service
+    endpoint: /templateApi
+    scripts:
+      postDeploy: npm install && npm run build && npm run connector:post-deploy
+      preUndeploy: npm install && npm run build && npm run connector:pre-undeploy
+    configuration:
+      standardConfiguration:
+        - key: CLOUD_IDENTIFIER
+          description: Cloud Region of your Project (for example gcp-eu, gcp-us, aws-eu). Use the same value as the Merchant Center application.
+          required: true
+          default: gcp-eu
+        - key: ENTRY_POINT_URI_PATH
+          description: Entry point path of the Merchant Center application. Use the same value as the Merchant Center application, because it decides who may edit templates.
+          required: true
+        - key: SENDGRID_DATA_RESIDENCY
+          description: "global (default) or eu, for SendGrid EU regional subusers."
+          required: false
+          default: global
+        - key: TEMPLATE_API_PUBLIC_URL
+          description: Optional. Public https URL of this service. Leave empty to use the address Connect assigns.
+          required: false
+      securedConfiguration:
+        - key: SENDGRID_API_KEY
+          description: Twilio SendGrid API key with the Template Engine read and write permissions. Use the same account as the notification sender.
+          required: true
+  - name: notification-manager
+    applicationType: merchant-center-custom-application
+    configuration:
+      standardConfiguration:
+        - key: CUSTOM_APPLICATION_ID
+          description: The ID shown when you register the custom application in the Merchant Center.
+          required: true
+        - key: CLOUD_IDENTIFIER
+          description: Cloud Region of your Project (for example gcp-eu, gcp-us, aws-eu).
+          required: true
+          default: gcp-eu
+        - key: ENTRY_POINT_URI_PATH
+          description: Entry point path chosen when registering the custom application. Must be globally unique, for example <company>-transactional-messaging.
+          required: true
+inheritAs:
+  apiClient:
+    scopes:
+      - manage_customers
+      - view_orders
+      - view_states
+      - manage_key_value_documents
+      - view_project_settings
+      - manage_subscriptions

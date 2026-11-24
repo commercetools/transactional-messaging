@@ -1,0 +1,50 @@
+{
+  "name": "@commercetools-labs/template-api",
+  "version": "1.0.0",
+  "description": "Merchant Center companion service: reads and writes SendGrid email and SMS templates for the Templates editor.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "rimraf ./build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "start": "node build/index.js",
+    "start:dev": "concurrently -k \"tsc -p tsconfig.build.json --watch\" \"nodemon -q build/index.js\"",
+    "lint": "eslint .",
+    "prettier": "prettier --write \"**/*.{js,mjs,cjs,ts,json}\"",
+    "test": "jest --config jest.config.cjs",
+    "test:watch": "jest --config jest.config.cjs --watch",
+    "connector:post-deploy": "node build/connector/post-deploy.js",
+    "connector:pre-undeploy": "node build/connector/pre-undeploy.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tsconfig/node24": "^24.0.6",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.19.2",
+    "@types/supertest": "^7.2.1",
+    "concurrently": "^10.0.7",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
+    "jest": "^30.5.2",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.10.1",
+    "rimraf": "^6.1.4",
+    "supertest": "^7.3.2",
+    "ts-jest": "^29.4.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.73.0"
+  },
+  "dependencies": {
+    "@commercetools-backend/express": "^27.17.1",
+    "@commercetools-backend/loggers": "^27.17.1",
+    "@commercetools/platform-sdk": "^9.8.0",
+    "@commercetools/ts-client": "^5.2.0",
+    "@sendgrid/client": "^8.1.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0"
+  },
+  "engines": {
+    "node": "^22.23.4 || ^24.22.1"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@commercetools-labs/transactional-messaging",
+  "version": "1.0.0",
+  "description": "[labs] Send commercetools order and account notifications by email (Twilio SendGrid) and SMS (Twilio), with templates and translations managed in the Merchant Center.",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/commercetools/transactional-messaging.git"
+  },
+  "bugs": {
+    "url": "https://github.com/commercetools/transactional-messaging/issues"
+  },
+  "homepage": "https://github.com/commercetools/transactional-messaging#readme",
+  "engines": {
+    "node": "^22.23.4 || ^24.22.1"
+  },
+  "scripts": {
+    "install:apps": "npm --prefix notification-sender install && npm --prefix template-api install && npm --prefix notification-manager install",
+    "build": "npm --prefix notification-sender run build && npm --prefix template-api run build && npm --prefix notification-manager run build",
+    "typecheck": "npm --prefix notification-sender run typecheck && npm --prefix template-api run typecheck && npm --prefix notification-manager run typecheck --if-present",
+    "lint": "npm --prefix notification-sender run lint && npm --prefix template-api run lint && npm --prefix notification-manager run lint --if-present",
+    "test": "npm --prefix notification-sender test && npm --prefix template-api test && npm --prefix notification-manager test --if-present",
+    "audit": "for d in notification-sender template-api notification-manager; do (cd $d && npm audit --audit-level=critical) || exit 1; done",
+    "simulate:connect": "bash tools/simulate-connect-build.sh notification-sender template-api notification-manager",
+    "preflight": "npm run check:shared && npm run typecheck && npm test && npm run audit && npm run simulate:connect",
+    "sync:shared": "node tools/sync-shared.mjs",
+    "check:shared": "node tools/sync-shared.mjs --check"
+  }
+}
