@@ -72,12 +72,6 @@ These are the keys in [connect.yaml](./connect.yaml). The configuration is set i
 | `TWILIO_MESSAGING_SERVICE_SID` | notification-sender | no | one of this or `TWILIO_FROM_NUMBER` for SMS | Messaging Service SID (`MG…`). Recommended. |
 | `TWILIO_FROM_NUMBER` | notification-sender | no | one of this or `TWILIO_MESSAGING_SERVICE_SID` for SMS | Sender number in E.164, for example `+15551234567`. |
 | `SMS_CONSENT_CUSTOM_FIELD` | notification-sender | no | no | Name of a boolean Custom Field on Customer (or Order, for guests). When set, an SMS is sent only if it is `true`. See [SMS consent](#sms-consent). |
-| `CUSTOMER_REGISTRATION_TEMPLATE_ID` | notification-sender | no | no | Legacy SendGrid template ID, used only when no email template exists in the Merchant Center. |
-| `CUSTOMER_PASSWORD_TOKEN_CREATION_TEMPLATE_ID` | notification-sender | no | no | Legacy fallback, as above (password reset). |
-| `ORDER_CONFIRMATION_TEMPLATE_ID` | notification-sender | no | no | Legacy fallback, as above (order confirmation). |
-| `ORDER_STATE_CHANGE_TEMPLATE_ID` | notification-sender | no | no | Legacy fallback, as above (order status update). |
-| `SHIPMENT_STATE_CHANGE_TEMPLATE_ID` | notification-sender | no | no | Legacy fallback, as above (shipping update). |
-| `ORDER_REFUND_TEMPLATE_ID` | notification-sender | no | no | Legacy fallback, as above (return / refund). |
 | `SENDGRID_API_KEY` | notification-sender | yes | to enable email or SMS | SendGrid API key. Needs `mail.send` for email and `templates.read` for SMS, because SMS texts are SendGrid templates. Checked at deployment. |
 | `TWILIO_API_KEY_SID` | notification-sender | yes | to enable SMS | Twilio API Key SID (`SK…`). Checked at deployment. |
 | `TWILIO_API_KEY_SECRET` | notification-sender | yes | to enable SMS | Twilio API Key secret. |
@@ -122,7 +116,7 @@ Templates are managed in Merchant Center → **Templates**. Email and SMS templa
 
 SendGrid has no includes, so the Merchant Center copies each part into the template when it compiles the MJML. **Saving a part saves again, in SendGrid, every template that uses it**, directly or through another part, and reports any template it could not update. A part cannot be deleted while a template or another part includes it.
 
-Each notification and channel has at most one **mapping**, stored as a Custom Object with the key `<notification>-<channel>`, for example `order-confirmation-sms`. In Merchant Center → **Mappings** you pick the SendGrid template from a list filtered by type, and switch the mapping on or off. A disabled mapping sends nothing for that channel. If there is no email mapping, the legacy `*_TEMPLATE_ID` setting is used, if set.
+Each notification and channel has at most one **mapping**, stored as a Custom Object with the key `<notification>-<channel>`, for example `order-confirmation-sms`. In Merchant Center → **Mappings** you pick the SendGrid template from a list filtered by type, and switch the mapping on or off. A disabled mapping sends nothing for that channel, and **a notification without a mapping sends nothing on that channel**.
 
 SMS texts are read from SendGrid when a message is sent and cached for five minutes, so an edit reaches SMS within that time. If SendGrid is briefly unreachable, the last text is used.
 
@@ -213,7 +207,7 @@ These changes are breaking. Plan the switch before you deploy.
 - The `CTP_*` keys are removed. Connect provides the API client through `inheritAs.apiClient`.
 - The Subscription key is `transactional-messaging-subscription`. **Undeploy the old connector first, or both will send each message.**
 - Password reset tokens minted by the connector now expire after 60 minutes.
-- The `*_TEMPLATE_ID` settings are optional fallbacks. Templates and mappings are now managed in the Merchant Center.
+- The `*_TEMPLATE_ID` settings are removed. Templates and mappings are managed in the Merchant Center, and a notification without an email mapping sends no email. **Before you deploy, create an email mapping for each notification you send**, pointing at the SendGrid template you used before (Merchant Center → Mappings lists every SendGrid template).
 - Email and SMS texts are SendGrid templates. SMS needs `SENDGRID_API_KEY` with the `templates.read` permission, even when the email channel is off.
 - The `templates/` command-line tool is gone. Its MJML designs and SMS texts are the defaults in the Merchant Center Templates form.
 

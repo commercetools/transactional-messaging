@@ -44,7 +44,7 @@ const deps = (overrides: Partial<DispatchDependencies> = {}): DispatchDependenci
   providers: { email: { send: emailSend }, sms: { send: smsSend }, smsTemplates: { fetch: smsFetch } },
   channels: {
     defaultLocale: 'en-US',
-    email: { apiKey: 'SG.x', from: 'shop@example.com', dataResidency: 'global', fallbackTemplateIds: {} },
+    email: { apiKey: 'SG.x', from: 'shop@example.com', dataResidency: 'global' },
     sms: {
       accountSid: 'AC',
       apiKeySid: 'SK',
@@ -194,15 +194,10 @@ describe('dispatchNotification', () => {
     expect(smsSend.mock.calls[0][0].body).toHaveLength(SMS_MAX_LENGTH);
   });
 
-  it('uses the legacy env template when no merchant email template exists', async () => {
-    await dispatchNotification(
-      context(),
-      deps({
-        templates: new Map(),
-        channels: { ...deps().channels, email: { ...deps().channels.email!, fallbackTemplateIds: { 'order-confirmation': 'd-legacy' } } },
-      })
-    );
-    expect(emailSend.mock.calls[0][0].templateId).toBe('d-legacy');
+  it('sends no email when there is no email mapping', async () => {
+    const outcome = await dispatchNotification(context(), deps({ templates: new Map() }));
+    expect(emailSend).not.toHaveBeenCalled();
+    expect(outcome).toEqual(expect.arrayContaining([expect.objectContaining({ channel: 'email', status: 'skipped', reason: 'no-template' })]));
   });
 });
 

@@ -43,6 +43,15 @@ const order = {
 
 const post = (message: unknown) => request(app).post('/notificationSender').send(pubSubBody(message));
 
+const EMAIL_MAPPING_KEY = 'order-confirmation-email';
+const EMAIL_MAPPING = {
+  schemaVersion: 2,
+  notification: 'order-confirmation',
+  channel: 'email',
+  enabled: true,
+  templateId: 'd-order-confirmation',
+};
+
 describe('POST /notificationSender', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -54,15 +63,14 @@ describe('POST /notificationSender', () => {
       sms: { send: smsSend },
       smsTemplates: { fetch: smsFetch },
     });
-    (loadMappings as jest.Mock).mockResolvedValue(new Map());
+    (loadMappings as jest.Mock).mockResolvedValue(new Map([[EMAIL_MAPPING_KEY, EMAIL_MAPPING]]));
     process.env.CTP_CLIENT_ID = 'connector-client';
     process.env.SENDER_EMAIL_ADDRESS = 'shop@example.com';
     process.env.SENDGRID_API_KEY = 'SG.test';
-    process.env.ORDER_CONFIRMATION_TEMPLATE_ID = 'd-order-confirmation';
     process.env.DEFAULT_LOCALE = 'en-US';
   });
 
-  it('acknowledges with 204 after sending the email confirmation via the legacy template', async () => {
+  it('acknowledges with 204 after sending the email confirmation via its mapping', async () => {
     (getOrderById as jest.Mock).mockResolvedValue(order);
 
     const response = await post(baseMessage());
@@ -82,6 +90,7 @@ describe('POST /notificationSender', () => {
     (getOrderById as jest.Mock).mockResolvedValue(order);
     (loadMappings as jest.Mock).mockResolvedValue(
       new Map([
+        [EMAIL_MAPPING_KEY, EMAIL_MAPPING],
         [
           'order-confirmation-sms',
           { schemaVersion: 2, notification: 'order-confirmation', channel: 'sms', enabled: true, templateId: 'd-0123456789abcdef0123456789abcdef' },
@@ -149,6 +158,7 @@ describe('POST /notificationSender', () => {
     (getOrderById as jest.Mock).mockResolvedValue(order);
     (loadMappings as jest.Mock).mockResolvedValue(
       new Map([
+        [EMAIL_MAPPING_KEY, EMAIL_MAPPING],
         [
           'order-confirmation-sms',
           { schemaVersion: 2, notification: 'order-confirmation', channel: 'sms', enabled: true, templateId: 'd-0123456789abcdef0123456789abcdef' },

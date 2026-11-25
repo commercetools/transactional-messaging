@@ -56,7 +56,7 @@
   "Mappings.deleteSuccess": "Mapping deleted.",
   "Mappings.deleteTitle": "Delete this mapping?",
   "Mappings.editTitle": "Edit mapping",
-  "Mappings.emptyState": "No mappings yet. Emails use the template IDs configured on the connector, if any. SMS stays off until you add an SMS mapping. Create templates under Templates.",
+  "Mappings.emptyState": "No mappings yet, so no notification is sent. Create templates under Templates, then add a mapping for each notification and channel you want to send.",
   "Mappings.enabledHint": "Disabled mappings are never sent. New mappings start disabled.",
   "Mappings.enabledLabel": "Enabled",
   "Mappings.error.duplicate": "A mapping for this notification and type already exists. Edit that one instead.",

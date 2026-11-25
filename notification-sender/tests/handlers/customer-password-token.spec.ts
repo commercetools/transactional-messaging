@@ -28,7 +28,6 @@ const message = (extra: Record<string, unknown> = {}) =>
 describe('handleCustomerPasswordTokenCreated', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.CUSTOMER_PASSWORD_TOKEN_CREATION_TEMPLATE_ID = 'd-reset';
     process.env.DEFAULT_LOCALE = 'en-US';
     (getCustomerById as jest.Mock).mockResolvedValue(customer);
   });

@@ -20,7 +20,7 @@ export default defineMessages({
   emptyState: {
     id: 'Mappings.emptyState',
     defaultMessage:
-      'No mappings yet. Emails use the template IDs configured on the connector, if any. SMS stays off until you add an SMS mapping. Create templates under Templates.',
+      'No mappings yet, so no notification is sent. Create templates under Templates, then add a mapping for each notification and channel you want to send.',
     description: 'Shown when no mapping exists',
   },
   columnNotification: {

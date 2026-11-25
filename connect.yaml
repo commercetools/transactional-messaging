@@ -30,24 +30,6 @@ deployAs:
         - key: SMS_CONSENT_CUSTOM_FIELD
           description: Optional name of a boolean Custom Field on Customer (or Order, for guests). When set, SMS is only sent if the field is true.
           required: false
-        - key: CUSTOMER_REGISTRATION_TEMPLATE_ID
-          description: Legacy fallback SendGrid template ID (customer registration). Used only when there is no email mapping for the notification in the Merchant Center.
-          required: false
-        - key: CUSTOMER_PASSWORD_TOKEN_CREATION_TEMPLATE_ID
-          description: Legacy fallback SendGrid template ID (password reset). Used only when there is no email mapping in the Merchant Center.
-          required: false
-        - key: ORDER_CONFIRMATION_TEMPLATE_ID
-          description: Legacy fallback SendGrid template ID (order confirmation). Used only when there is no email mapping in the Merchant Center.
-          required: false
-        - key: ORDER_STATE_CHANGE_TEMPLATE_ID
-          description: Legacy fallback SendGrid template ID (order status update). Used only when there is no email mapping in the Merchant Center.
-          required: false
-        - key: SHIPMENT_STATE_CHANGE_TEMPLATE_ID
-          description: Legacy fallback SendGrid template ID (shipping update). Used only when there is no email mapping in the Merchant Center.
-          required: false
-        - key: ORDER_REFUND_TEMPLATE_ID
-          description: Legacy fallback SendGrid template ID (return / refund). Used only when there is no email mapping in the Merchant Center.
-          required: false
       securedConfiguration:
         - key: SENDGRID_API_KEY
           description: Twilio SendGrid API key. Needs mail.send for the email channel and templates.read for the SMS channel, because SMS texts are SendGrid templates. Required to enable email or SMS.
