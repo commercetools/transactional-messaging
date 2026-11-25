@@ -57,6 +57,79 @@ export default defineMessages({
     defaultMessage: 'SMS',
     description: 'Template type',
   },
+  typePart: {
+    id: 'Templates.typePart',
+    defaultMessage: 'Part',
+    description:
+      'Template type: a reusable MJML block included by other templates',
+  },
+  subjectPartHint: {
+    id: 'Templates.subjectPartHint',
+    defaultMessage:
+      'A part has no subject. The template that includes it does.',
+    description: 'Hint under the disabled subject of a part',
+  },
+  partIncludeHint: {
+    id: 'Templates.partIncludeHint',
+    defaultMessage: 'Templates include this part with {tag}',
+    description: 'Shows the mj-include tag for the part being edited',
+  },
+  partPlaceholder: {
+    id: 'Templates.partPlaceholder',
+    defaultMessage: 'Insert a part…',
+    description: 'Placeholder of the part picker',
+  },
+  partPickerEmpty: {
+    id: 'Templates.partPickerEmpty',
+    defaultMessage: 'No parts for this notification',
+    description:
+      'Placeholder of the part picker when there is nothing to insert',
+  },
+  partLabel: {
+    id: 'Templates.partLabel',
+    defaultMessage: 'Insert a part at the cursor',
+    description: 'Accessible label of the part picker',
+  },
+  partDeleteBody: {
+    id: 'Templates.partDeleteBody',
+    defaultMessage: 'The part "{name}" will be deleted. This cannot be undone.',
+    description: 'Delete dialog text for a part',
+  },
+  partDeleteBlocked: {
+    id: 'Templates.partDeleteBlocked',
+    defaultMessage:
+      '"{name}" is included by {count, plural, one {# template or part} other {# templates or parts}}. Remove the mj-include from them first.',
+    description: 'Shown when a part in use cannot be deleted',
+  },
+  partSaveSuccess: {
+    id: 'Templates.partSaveSuccess',
+    defaultMessage:
+      'The part was saved. {count, plural, =0 {No template uses it.} one {# template that uses it was updated.} other {# templates that use it were updated.}}',
+    description: 'Notification after saving a part',
+  },
+  partRepublishError: {
+    id: 'Templates.partRepublishError',
+    defaultMessage:
+      'The part was saved, but {count, plural, one {# template that uses it} other {# templates that use it}} could not be updated, so SendGrid still has the old version: {details}',
+    description:
+      'Notification when templates using a part could not be saved again',
+  },
+  partSaveError: {
+    id: 'Templates.partSaveError',
+    defaultMessage: 'The part could not be saved. {message}',
+    description: 'Notification',
+  },
+  partNotFound: {
+    id: 'Templates.partNotFound',
+    defaultMessage: 'This part does not exist.',
+    description: 'Shown when a part URL points to nothing',
+  },
+  partUsageNotice: {
+    id: 'Templates.partUsageNotice',
+    defaultMessage:
+      '{count, plural, one {# template uses} other {# templates use}} this part. Saving updates {count, plural, one {it} other {them}} in SendGrid too.',
+    description: 'Shown above a part that templates include',
+  },
   createdInSendGrid: {
     id: 'Templates.createdInSendGrid',
     defaultMessage: 'Created in SendGrid',

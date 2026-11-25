@@ -24,5 +24,8 @@ export const SERVICE_CONFIG_KEY = 'template-api';
 /** Custom Object container that remembers which notification each template was written for. Key = SendGrid template ID. */
 export const TEMPLATE_SOURCES_CONTAINER = 'notification-template-sources';
 
+/** Custom Object container for template parts (reusable MJML). Key = the part's include path without `.mjml`. */
+export const TEMPLATE_PARTS_CONTAINER = 'notification-template-parts';
+
 /** Custom Object that holds the localization entries. */
 export const LOCALIZATIONS_KEY = 'transactional-emails';

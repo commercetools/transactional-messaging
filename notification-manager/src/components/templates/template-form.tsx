@@ -38,6 +38,15 @@ import {
 } from '../../templates/defaults';
 import { insertAtSelection } from '../../templates/insert';
 import {
+  DEFAULT_PART_MJML,
+  includeTag,
+  newPartKey,
+  partMap,
+  resolveIncludes,
+  wrapPart,
+  type TemplatePart,
+} from '../../templates/parts';
+import {
   compileMjml,
   loadMjml,
   previewData,
@@ -47,11 +56,7 @@ import {
   type Preview,
 } from '../../templates/preview';
 import { estimateSms } from '../../templates/sms-segments';
-import {
-  allVariables,
-  samplePayload,
-  type TemplateVariable,
-} from '../../templates/variables';
+import { allVariables, samplePayload } from '../../templates/variables';
 import { NOTIFICATION_LABELS } from '../mappings/mapping-helpers';
 import messages from './messages';
 import {
@@ -60,6 +65,7 @@ import {
   validateTemplateForm,
   type TemplateErrorCode,
   type TemplateFormValues,
+  type TemplateKind,
 } from './template-helpers';
 
 /** A template written in SendGrid's own editor: shown as it is, never edited here. */
@@ -72,6 +78,12 @@ type Props = {
   localizations?: Localizations;
   canManage: boolean;
   external?: ExternalTemplate;
+  /** Every part, for the part picker and to resolve includes. */
+  parts: ReadonlyArray<TemplatePart>;
+  /** Set when an existing part is edited. */
+  partKey?: string;
+  /** How many templates include the part being edited. */
+  usageCount?: number;
   onSubmit: (values: TemplateFormValues, html: string) => Promise<void>;
   onClose: () => void;
 };
@@ -87,6 +99,9 @@ const TemplateForm: FC<Props> = ({
   localizations,
   canManage,
   external,
+  parts,
+  partKey,
+  usageCount = 0,
   onSubmit,
   onClose,
 }) => {
@@ -97,6 +112,7 @@ const TemplateForm: FC<Props> = ({
   const locale = dataLocale || 'en-US';
   const [compiler, setCompiler] = useState<Compiler | undefined>(undefined);
   const [pickerInput, setPickerInput] = useState('');
+  const [partPickerInput, setPartPickerInput] = useState('');
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
   const selection = useRef<{ start: number; end: number } | undefined>(
     undefined
@@ -105,6 +121,11 @@ const TemplateForm: FC<Props> = ({
 
   const readOnly = !canManage || Boolean(external);
   const isEdit = mode === 'edit';
+  // The part being edited is left out, so including it in itself is reported as a loop.
+  const available = useMemo(
+    () => partMap(parts.filter((part) => part.key !== partKey)),
+    [parts, partKey]
+  );
 
   const formik = useFormik<TemplateFormValues>({
     initialValues,
@@ -112,13 +133,19 @@ const TemplateForm: FC<Props> = ({
       const mjml = await loadMjml();
       const html =
         values.channel === 'email'
-          ? compileMjml(mjml, values.content).html ?? ''
+          ? compileMjml(mjml, resolveIncludes(values.content, available).mjml)
+              .html ?? ''
           : '';
       await onSubmit(values, html);
     },
   });
   const { values } = formik;
-  const errors = validateTemplateForm(values);
+  const errors = validateTemplateForm(
+    values,
+    values.channel === 'sms' ? undefined : available,
+    partKey
+  );
+  const isPart = values.channel === 'part';
 
   useEffect(() => {
     let active = true;
@@ -155,6 +182,23 @@ const TemplateForm: FC<Props> = ({
     [variables]
   );
 
+  const partItems = useMemo(
+    () =>
+      parts
+        .filter(
+          (part) => part.notification === notification && part.key !== partKey
+        )
+        .map((part) => ({ id: part.key, name: part.name })),
+    [parts, notification, partKey]
+  );
+  const includePath = isPart
+    ? partKey ??
+      newPartKey(
+        values.name,
+        parts.map((part) => part.key)
+      )
+    : undefined;
+
   const data = useMemo(
     () =>
       notification
@@ -169,31 +213,34 @@ const TemplateForm: FC<Props> = ({
     if (!data) return undefined;
     if (values.channel === 'sms')
       return renderSmsPreview(deferredContent, data);
-    return compiler
-      ? renderEmailPreview(compiler, deferredContent, data)
-      : undefined;
-  }, [data, compiler, deferredContent, values.channel]);
+    if (!compiler) return undefined;
+    const resolved = resolveIncludes(deferredContent, available, partKey);
+    if (resolved.errors.length > 0) return { errors: resolved.errors };
+    return renderEmailPreview(
+      compiler,
+      values.channel === 'part' ? wrapPart(resolved.mjml) : resolved.mjml,
+      data
+    );
+  }, [data, compiler, deferredContent, values.channel, available, partKey]);
 
-  const insertVariable = (variable: TemplateVariable) => {
+  const insertToken = (token: string) => {
     const editor = editorRef.current;
     const at = selection.current ?? {
       start: editor?.selectionStart ?? values.content.length,
       end: editor?.selectionEnd ?? values.content.length,
     };
-    const result = insertAtSelection(
-      values.content,
-      at.start,
-      at.end,
-      variable.token
-    );
+    const result = insertAtSelection(values.content, at.start, at.end, token);
     pendingCursor.current = result.cursor;
     selection.current = { start: result.cursor, end: result.cursor };
     void formik.setFieldValue('content', result.value);
   };
 
+  const defaultFor = (key: NotificationKey, kind: TemplateKind): string =>
+    kind === 'part' ? DEFAULT_PART_MJML : defaultContent(key, kind as Channel);
+
   const changeDefaults = (next: {
     notification?: NotificationKey;
-    channel?: Channel;
+    channel?: TemplateKind;
   }) => {
     const channel = next.channel ?? values.channel;
     const target = next.notification ?? (values.notification || undefined);
@@ -206,9 +253,9 @@ const TemplateForm: FC<Props> = ({
         ? nextOnDefaultChange({
             current: values.content,
             previousDefault: previousNotification
-              ? defaultContent(previousNotification, values.channel)
+              ? defaultFor(previousNotification, values.channel)
               : undefined,
-            nextDefault: defaultContent(target, channel),
+            nextDefault: defaultFor(target, channel),
           })
         : values.content,
       subject:
@@ -282,7 +329,7 @@ const TemplateForm: FC<Props> = ({
         </Alert.Root>
       );
     }
-    return values.channel === 'email' ? (
+    return values.channel !== 'sms' ? (
       <iframe
         title={intl.formatMessage(messages.previewLabel)}
         sandbox=""
@@ -310,6 +357,15 @@ const TemplateForm: FC<Props> = ({
               <Alert.Root colorPalette="info">
                 <Alert.Description>
                   {intl.formatMessage(messages.readOnlyNotice)}
+                </Alert.Description>
+              </Alert.Root>
+            )}
+            {usageCount > 0 && (
+              <Alert.Root colorPalette="info">
+                <Alert.Description>
+                  {intl.formatMessage(messages.partUsageNotice, {
+                    count: usageCount,
+                  })}
                 </Alert.Description>
               </Alert.Root>
             )}
@@ -356,7 +412,7 @@ const TemplateForm: FC<Props> = ({
                     value={values.channel}
                     isDisabled={isEdit || readOnly}
                     onChange={(value: string) =>
-                      changeDefaults({ channel: value as Channel })
+                      changeDefaults({ channel: value as TemplateKind })
                     }
                   >
                     <RadioInput.Option value="email">
@@ -364,6 +420,9 @@ const TemplateForm: FC<Props> = ({
                     </RadioInput.Option>
                     <RadioInput.Option value="sms">
                       {intl.formatMessage(messages.typeSms)}
+                    </RadioInput.Option>
+                    <RadioInput.Option value="part">
+                      {intl.formatMessage(messages.typePart)}
                     </RadioInput.Option>
                   </RadioInput.Root>
                 </FormField.Input>
@@ -408,7 +467,7 @@ const TemplateForm: FC<Props> = ({
               </Box>
             </Stack>
 
-            {values.channel === 'email' && !external && (
+            {values.channel !== 'sms' && !external && (
               <TextInputField
                 label={intl.formatMessage(messages.subjectLabel)}
                 value={values.subject}
@@ -416,8 +475,13 @@ const TemplateForm: FC<Props> = ({
                   void formik.setFieldValue('subject', value)
                 }
                 onBlur={() => void formik.setFieldTouched('subject', true)}
-                isRequired
-                isDisabled={readOnly}
+                isRequired={!isPart}
+                isDisabled={readOnly || isPart}
+                description={
+                  isPart
+                    ? intl.formatMessage(messages.subjectPartHint)
+                    : undefined
+                }
                 touched={Boolean(formik.touched.subject)}
                 errors={errors.subject ? { [errors.subject]: true } : undefined}
                 renderError={(key: string) =>
@@ -444,50 +508,104 @@ const TemplateForm: FC<Props> = ({
                   >
                     <Text fontWeight="bold">
                       {intl.formatMessage(
-                        values.channel === 'email'
-                          ? messages.editorLabelEmail
-                          : messages.editorLabelSms
+                        values.channel === 'sms'
+                          ? messages.editorLabelSms
+                          : messages.editorLabelEmail
                       )}
                     </Text>
+                    {includePath && !external && (
+                      <Text fontSize="sm" color="neutral.11">
+                        {intl.formatMessage(messages.partIncludeHint, {
+                          tag: includeTag(includePath),
+                        })}
+                      </Text>
+                    )}
                     {!external && (
-                      <ComboBox.Root
-                        items={pickerItems}
-                        inputValue={pickerInput}
-                        onInputChange={setPickerInput}
-                        selectedKeys={[]}
-                        selectionMode="single"
-                        isDisabled={readOnly || !notification}
-                        placeholder={intl.formatMessage(
-                          messages.variablePlaceholder
-                        )}
-                        aria-label={intl.formatMessage(messages.variableLabel)}
-                        onSelectionChange={(keys: Iterable<unknown>) => {
-                          const id = Array.from(keys)[0];
-                          const variable = variablesById.get(String(id));
-                          if (variable) insertVariable(variable);
-                          // Reset, so the same variable can be picked again.
-                          setPickerInput('');
-                        }}
-                      >
-                        <ComboBox.Trigger />
-                        <ComboBox.Popover>
-                          <ComboBox.ListBox>
-                            {(item: { id: string; name: string }) => (
-                              <ComboBox.Option id={item.id}>
-                                {item.name}
-                              </ComboBox.Option>
+                      <Stack direction="row" gap="300" flexWrap="wrap">
+                        <Box flex="1" minWidth="200px">
+                          <ComboBox.Root
+                            items={pickerItems}
+                            inputValue={pickerInput}
+                            onInputChange={setPickerInput}
+                            selectedKeys={[]}
+                            selectionMode="single"
+                            isDisabled={readOnly || !notification}
+                            placeholder={intl.formatMessage(
+                              messages.variablePlaceholder
                             )}
-                          </ComboBox.ListBox>
-                        </ComboBox.Popover>
-                      </ComboBox.Root>
+                            aria-label={intl.formatMessage(
+                              messages.variableLabel
+                            )}
+                            onSelectionChange={(keys: Iterable<unknown>) => {
+                              const id = Array.from(keys)[0];
+                              const variable = variablesById.get(String(id));
+                              if (variable) insertToken(variable.token);
+                              // Reset, so the same variable can be picked again.
+                              setPickerInput('');
+                            }}
+                          >
+                            <ComboBox.Trigger />
+                            <ComboBox.Popover>
+                              <ComboBox.ListBox>
+                                {(item: { id: string; name: string }) => (
+                                  <ComboBox.Option id={item.id}>
+                                    {item.name}
+                                  </ComboBox.Option>
+                                )}
+                              </ComboBox.ListBox>
+                            </ComboBox.Popover>
+                          </ComboBox.Root>
+                        </Box>
+                        {values.channel !== 'sms' && (
+                          <Box flex="1" minWidth="200px">
+                            <ComboBox.Root
+                              items={partItems}
+                              inputValue={partPickerInput}
+                              onInputChange={setPartPickerInput}
+                              selectedKeys={[]}
+                              selectionMode="single"
+                              isDisabled={
+                                readOnly ||
+                                !notification ||
+                                partItems.length === 0
+                              }
+                              placeholder={intl.formatMessage(
+                                notification && partItems.length === 0
+                                  ? messages.partPickerEmpty
+                                  : messages.partPlaceholder
+                              )}
+                              aria-label={intl.formatMessage(
+                                messages.partLabel
+                              )}
+                              onSelectionChange={(keys: Iterable<unknown>) => {
+                                const key = Array.from(keys)[0];
+                                if (key !== undefined)
+                                  insertToken(includeTag(String(key)));
+                                setPartPickerInput('');
+                              }}
+                            >
+                              <ComboBox.Trigger />
+                              <ComboBox.Popover>
+                                <ComboBox.ListBox>
+                                  {(item: { id: string; name: string }) => (
+                                    <ComboBox.Option id={item.id}>
+                                      {item.name}
+                                    </ComboBox.Option>
+                                  )}
+                                </ComboBox.ListBox>
+                              </ComboBox.Popover>
+                            </ComboBox.Root>
+                          </Box>
+                        )}
+                      </Stack>
                     )}
                     {!external && (
                       <MultilineTextInput
                         ref={editorRef}
                         aria-label={intl.formatMessage(
-                          values.channel === 'email'
-                            ? messages.editorLabelEmail
-                            : messages.editorLabelSms
+                          values.channel === 'sms'
+                            ? messages.editorLabelSms
+                            : messages.editorLabelEmail
                         )}
                         value={values.content}
                         isReadOnly={readOnly}
@@ -495,7 +613,7 @@ const TemplateForm: FC<Props> = ({
                           Boolean(errors.content) &&
                           Boolean(formik.touched.content)
                         }
-                        rows={values.channel === 'email' ? 22 : 8}
+                        rows={values.channel === 'sms' ? 8 : 22}
                         fontFamily="mono"
                         fontSize="sm"
                         spellCheck="false"

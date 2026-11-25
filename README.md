@@ -19,6 +19,7 @@ commercetools Project
  ├─ Custom Objects
  │   ├─ notification-mappings    one object per notification and channel: which SendGrid template to send
  │   ├─ notification-template-sources   the MJML a template was built from, so it can be edited again
+ │   ├─ notification-template-parts     reusable MJML blocks that templates include
  │   ├─ localizations / transactional-emails   translations used as {{messages.<key>}}
  │   └─ transactional-messaging / template-api   URL of the template service
  ├─ Connect service app: template-api (reads and writes SendGrid templates for the Merchant Center)
@@ -110,6 +111,9 @@ Templates live in SendGrid, for both channels, and are managed in Merchant Cente
 - **Email:** a SendGrid dynamic template, written as MJML with a live preview. The Merchant Center compiles the MJML and stores the HTML in SendGrid. The MJML is kept in the `notification-template-sources` Custom Objects so the template can be edited again.
 - **SMS:** a SendGrid dynamic template whose name starts with `[SMS] ` and whose text is the active version's plain text, written as Handlebars. People never type the prefix; the template service adds and removes it.
 - Templates that were created in SendGrid's own editor are listed read-only, labelled "Created in SendGrid".
+- **Part:** a reusable block of MJML, such as a header, a footer or an order summary, bound to one notification so it can use that notification's variables. An email template or another part includes it with `<mj-include path="<key>.mjml" />`; the **Insert a part** list in the editor writes the tag and offers the parts of the same notification. Parts are stored in the `notification-template-parts` Custom Objects, not in SendGrid, and have no subject.
+
+SendGrid has no includes, so the Merchant Center copies each part into the template when it compiles the MJML. **Saving a part saves again, in SendGrid, every template that uses it**, directly or through another part, and reports any template it could not update. A part cannot be deleted while a template or another part includes it.
 
 Each notification and channel has at most one **mapping**, stored as a Custom Object with the key `<notification>-<channel>`, for example `order-confirmation-sms`. In Merchant Center → **Mappings** you pick the SendGrid template from a list filtered by type, and switch the mapping on or off. A disabled mapping sends nothing for that channel. If there is no email mapping, the legacy `*_TEMPLATE_ID` setting is used, if set.
 

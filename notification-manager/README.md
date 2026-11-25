@@ -27,6 +27,6 @@ The application needs the **View** permission to open, and **Manage** to change 
 ## Notes
 
 - Mappings read and write Custom Objects in the `notification-mappings` container; Localizations use `localizations`. These are the same objects the connector reads.
-- Templates are read and written in SendGrid through the `template-api` service, called with the Merchant Center `forward-to` proxy. The service URL is the Custom Object `transactional-messaging/template-api`. The MJML source of each email template is kept in `notification-template-sources`.
+- Templates are read and written in SendGrid through the `template-api` service, called with the Merchant Center `forward-to` proxy. The service URL is the Custom Object `transactional-messaging/template-api`. The MJML source of each email template is kept in `notification-template-sources`. Parts (reusable MJML that templates pull in with `<mj-include>`) are kept in `notification-template-parts`; the app resolves the includes before it compiles, and saving a part recompiles and saves the templates that use it.
 - `src/shared/` holds generated copies of the SMS renderer, the notification keys and the template schema. Don't edit them here. Edit them in `notification-sender/src`, then run `npm run sync:shared` from the repository root.
 - Don't add `@commercetools-uikit` packages. The application uses Nimbus only.

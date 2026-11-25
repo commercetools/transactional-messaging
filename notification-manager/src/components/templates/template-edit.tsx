@@ -14,11 +14,16 @@ import { parseTemplateSource } from '../../templates/template-source';
 import messages from './messages';
 import TemplateForm from './template-form';
 import type { TemplateFormValues } from './template-helpers';
+import type { TemplateLibrary } from './use-part-save';
 import { useTemplateSave } from './use-template-save';
 
-type Props = { api: TemplateApi; onClose: () => void };
+type Props = {
+  api: TemplateApi;
+  library: TemplateLibrary;
+  onClose: () => void;
+};
 
-const TemplateEdit: FC<Props> = ({ api, onClose }) => {
+const TemplateEdit: FC<Props> = ({ api, library, onClose }) => {
   const intl = useIntl();
   const { id } = useParams<{ id: string }>();
   const canManage = useIsAuthorized({
@@ -84,6 +89,7 @@ const TemplateEdit: FC<Props> = ({ api, onClose }) => {
       initialValues={initialValues}
       localizations={localizations}
       canManage={canManage}
+      parts={library.parts}
       external={
         editable
           ? undefined
