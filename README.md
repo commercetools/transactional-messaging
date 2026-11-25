@@ -1,12 +1,12 @@
 # transactional-messaging
 
+> This is a commercetools-labs project: freely available and shared as-is, and it is unsupported, so commercetools support does not cover it. See [SUPPORT.md](./SUPPORT.md).
+
 Send the messages a shop owes its customers (order confirmations, shipping and status updates, return notices, welcome and password reset emails) by email through Twilio SendGrid and by SMS through Twilio, straight from your commercetools Project.
 
 It is for commercetools teams who want transactional email and SMS without building the plumbing or asking a developer for every wording change. A Connect application listens to commercetools messages and sends the notification. A Merchant Center application gives merchandisers the rest: they design email templates in MJML with a live preview and sample data, write SMS texts, reuse blocks such as headers and footers across templates, choose which template each notification uses, switch channels on or off, and translate the texts, all without a deployment.
 
 When it runs, a customer who places an order gets a confirmation email with their line items and shipping address, in their language, and an SMS if they gave a mobile number and you enabled SMS.
-
-This is a commercetools-labs project: freely available and shared as-is, and it is unsupported, so commercetools support does not cover it. See [SUPPORT.md](./SUPPORT.md).
 
 ## How it works
 
@@ -63,7 +63,7 @@ Connect creates the API client from the scopes in `connect.yaml`, and creates th
 
 ## Configuration
 
-These are the keys in [connect.yaml](./connect.yaml). The configuration is set in the Connect deployment.
+These are the keys in [connect.yaml](./connect.yaml). The configuration is set in the Connect deployment. Keys marked **shared** are declared once under `inheritAs.configuration` and passed to every application, so you set them a single time.
 
 | Key | Application | Secured | Required | Description |
 |---|---|---|---|---|
@@ -78,13 +78,11 @@ These are the keys in [connect.yaml](./connect.yaml). The configuration is set i
 | `TWILIO_API_KEY_SID` | notification-sender | yes | to enable SMS | Twilio API Key SID (`SK…`). Checked at deployment. |
 | `TWILIO_API_KEY_SECRET` | notification-sender | yes | to enable SMS | Twilio API Key secret. |
 | `SENDGRID_API_KEY` | template-api | yes | yes | SendGrid API key with the Template Engine read and write permissions, for the Templates page. Use the same SendGrid account as the notification-sender; one key with `mail.send` and Template Engine read and write can serve both. |
-| `CLOUD_IDENTIFIER` | template-api | no | yes (default `gcp-eu`) | Same value as for notification-manager. Used to check the Merchant Center token. |
-| `ENTRY_POINT_URI_PATH` | template-api | no | yes | Same value as for notification-manager. It decides which View and Manage permissions the service checks. |
 | `SENDGRID_DATA_RESIDENCY` | template-api | no | no (default `global`) | Same value as for notification-sender. |
 | `TEMPLATE_API_PUBLIC_URL` | template-api | no | no | Public https URL of the service, used as the token audience. Leave empty to use the URL Connect assigns. |
 | `CUSTOM_APPLICATION_ID` | notification-manager | no | yes | The ID shown when you register the custom application. |
-| `CLOUD_IDENTIFIER` | notification-manager | no | yes (default `gcp-eu`) | Cloud Region of your Project, for example `gcp-eu`, `gcp-us`, `aws-eu`. |
-| `ENTRY_POINT_URI_PATH` | notification-manager | no | yes | Entry point path chosen at registration. It must be globally unique, for example `<company>-transactional-messaging`. |
+| `CLOUD_IDENTIFIER` | shared | no | yes (default `gcp-eu`) | Cloud Region of your Project, for example `gcp-eu`, `gcp-us`, `aws-eu`. The Merchant Center application runs there, and template-api uses it to check the Merchant Center token. |
+| `ENTRY_POINT_URI_PATH` | shared | no | yes | Entry point path chosen when you register the custom application. It must be globally unique, for example `<company>-transactional-messaging`. template-api uses it to know which View and Manage permissions to check. |
 
 Connect sets the application URL of notification-manager (`APPLICATION_URL`) and the `CTP_*` API client itself; they are not in `connect.yaml`. The `*_DEV_*` settings in the `.env.example` files are for local development only and are refused in a deployment.
 
