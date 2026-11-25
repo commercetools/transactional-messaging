@@ -59,10 +59,46 @@ const messageOf = (body: unknown, status: number): string =>
  * short-lived token that the service verifies, so no credentials are kept in the browser.
  * `serviceUrl` is the Connect endpoint URL stored by the connector's post-deploy script.
  */
-export const createTemplateApi = (serviceUrl: string): TemplateApi => {
+export const createTemplateApi = (
+  serviceUrl: string,
+  options: { direct?: boolean } = {}
+): TemplateApi => {
   const base = serviceUrl.replace(/\/+$/, '');
 
-  const call = <T>(method: Method, path: string, body?: unknown): Promise<T> =>
+  const readResponse = async <T>(response: Response): Promise<T> => {
+    const parsed: unknown =
+      response.status === 204
+        ? undefined
+        : await response.json().catch(() => undefined);
+    if (!response.ok) {
+      throw new TemplateApiError(
+        response.status,
+        messageOf(parsed, response.status)
+      );
+    }
+    return parsed as T;
+  };
+
+  /** Local development only: no Merchant Center proxy, so no token. The service must run in dev mode. */
+  const callDirect = async <T>(
+    method: Method,
+    path: string,
+    body?: unknown
+  ): Promise<T> =>
+    readResponse<T>(
+      await fetch(`${base}${path}`, {
+        method,
+        headers:
+          body === undefined ? {} : { 'Content-Type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      })
+    );
+
+  const callProxied = <T>(
+    method: Method,
+    path: string,
+    body?: unknown
+  ): Promise<T> =>
     executeHttpClientRequest<T>(
       async (options: ReturnType<typeof createHttpClientOptions>) => {
         const response = await fetch(buildApiUrl('/proxy/forward-to'), {
@@ -76,18 +112,8 @@ export const createTemplateApi = (serviceUrl: string): TemplateApi => {
           },
           body: body === undefined ? undefined : JSON.stringify(body),
         });
-        const parsed: unknown =
-          response.status === 204
-            ? undefined
-            : await response.json().catch(() => undefined);
-        if (!response.ok) {
-          throw new TemplateApiError(
-            response.status,
-            messageOf(parsed, response.status)
-          );
-        }
         return {
-          data: parsed as T,
+          data: await readResponse<T>(response),
           statusCode: response.status,
           getHeader: (name: string) => response.headers.get(name),
         };
@@ -100,6 +126,8 @@ export const createTemplateApi = (serviceUrl: string): TemplateApi => {
         },
       }
     );
+
+  const call = options.direct ? callDirect : callProxied;
 
   return {
     list: async (channel) => {

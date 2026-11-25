@@ -8,6 +8,7 @@ import express, {
 import CustomError from './errors/custom.error';
 import { errorMiddleware } from './middleware/error.middleware';
 import { authenticate } from './middleware/auth.middleware';
+import { devCors, devSession } from './middleware/dev.middleware';
 import { createTemplatesRouter } from './routes/templates.route';
 import type { ServiceConfiguration } from './config';
 import type { TemplateGateway } from './sendgrid/templates';
@@ -18,10 +19,13 @@ export const ENDPOINT = '/templateApi';
 export const createApp = (
   config: ServiceConfiguration,
   gateway: TemplateGateway,
-  authMiddleware: RequestHandler = authenticate(config)
+  authMiddleware: RequestHandler = config.devMode
+    ? devSession(config)
+    : authenticate(config)
 ): Express => {
   const app: Express = express();
   app.disable('x-powered-by');
+  if (config.devMode) app.use(devCors);
   app.use(express.json({ limit: '2mb' }));
 
   // Unauthenticated liveness probe for Connect. It returns nothing about the configuration.

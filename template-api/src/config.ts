@@ -17,6 +17,11 @@ export type ServiceConfiguration = {
   entryPointUriPath: string;
   /** Origin the Merchant Center signs into the token as its audience. */
   audience: string;
+  /**
+   * Local development only: skips the Merchant Center token check and answers browser calls directly.
+   * Never allowed in a deployed service (see readServiceConfiguration).
+   */
+  devMode: boolean;
 };
 
 const value = (env: NodeJS.ProcessEnv, name: string): string | undefined => {
@@ -97,10 +102,21 @@ export const readServiceConfiguration = (
   const entryPointUriPath = value(env, 'ENTRY_POINT_URI_PATH');
   if (!entryPointUriPath) problems.push('ENTRY_POINT_URI_PATH is required');
 
+  const devMode = value(env, 'TEMPLATE_API_DEV_MODE') === 'true';
+  if (
+    devMode &&
+    (env.NODE_ENV === 'production' || value(env, 'CONNECT_SERVICE_URL'))
+  ) {
+    problems.push(
+      'TEMPLATE_API_DEV_MODE must not be set in a deployed service, because it turns off authentication'
+    );
+  }
+
   const publicUrl =
     value(env, 'TEMPLATE_API_PUBLIC_URL') ?? value(env, 'CONNECT_SERVICE_URL');
   const audience = publicUrl ? originOf(publicUrl) : undefined;
-  if (!audience) {
+  // Dev mode has no token to verify, so it needs no audience.
+  if (!audience && !devMode) {
     problems.push(
       'CONNECT_SERVICE_URL (or TEMPLATE_API_PUBLIC_URL) must be an https URL, or http://localhost for local development'
     );
@@ -117,7 +133,8 @@ export const readServiceConfiguration = (
     dataResidency: residency === 'eu' ? 'eu' : 'global',
     cloudIdentifier: cloudIdentifier as string,
     entryPointUriPath: entryPointUriPath as string,
-    audience: audience as string,
+    audience: audience ?? '',
+    devMode,
   };
 };
 
