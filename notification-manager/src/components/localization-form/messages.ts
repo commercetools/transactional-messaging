@@ -3,12 +3,13 @@ import { defineMessages } from 'react-intl';
 export default defineMessages({
   keyTitle: {
     id: 'LocalizationForm.keyTitle',
-    defaultMessage: 'Key',
+    defaultMessage: 'Set key',
     description: 'Label for the localization key',
   },
   keyHint: {
     id: 'LocalizationForm.keyHint',
-    defaultMessage: 'Two to 256 letters, numbers, hyphens or underscores.',
+    defaultMessage:
+      'Notifications read only the set with the key transactional-emails. Two to 256 letters, numbers, hyphens or underscores; it cannot be changed later.',
     description: 'Hint for the localization key',
   },
   keyInvalid: {
@@ -23,7 +24,7 @@ export default defineMessages({
   },
   nameTitle: {
     id: 'LocalizationForm.nameTitle',
-    defaultMessage: 'Name',
+    defaultMessage: 'Set name',
     description: 'Label for the localized name',
   },
   nameRequired: {
@@ -33,7 +34,7 @@ export default defineMessages({
   },
   entriesTitle: {
     id: 'LocalizationForm.entriesTitle',
-    defaultMessage: 'Message types',
+    defaultMessage: 'Texts per message type',
     description: 'Section title for the entries of a localization',
   },
   entryKeyTitle: {
@@ -44,17 +45,17 @@ export default defineMessages({
   },
   entryNameTitle: {
     id: 'LocalizationForm.entryNameTitle',
-    defaultMessage: 'Name',
+    defaultMessage: 'Group name',
     description: 'Label for the name of a message type entry',
   },
   valueKeyTitle: {
     id: 'LocalizationForm.valueKeyTitle',
-    defaultMessage: 'Value key',
+    defaultMessage: 'Variable name',
     description: 'Label for the key of a translatable value',
   },
   valueLabelTitle: {
     id: 'LocalizationForm.valueLabelTitle',
-    defaultMessage: 'Text',
+    defaultMessage: 'Translated text',
     description: 'Label for the localized text of a translatable value',
   },
   addEntry: {
@@ -64,7 +65,7 @@ export default defineMessages({
   },
   addValue: {
     id: 'LocalizationForm.addValue',
-    defaultMessage: 'Add value',
+    defaultMessage: 'Add text',
     description: 'Button to add a value to a message type entry',
   },
   deleteEntry: {
@@ -74,7 +75,7 @@ export default defineMessages({
   },
   deleteValue: {
     id: 'LocalizationForm.deleteValue',
-    defaultMessage: 'Delete value',
+    defaultMessage: 'Delete text',
     description: 'Accessible label for deleting a value',
   },
   save: {
@@ -95,7 +96,34 @@ export default defineMessages({
   readOnlyNotice: {
     id: 'LocalizationForm.readOnlyNotice',
     defaultMessage:
-      'You can view this localization, but you need manage permission to change it.',
+      'You can view these translations, but you need the Manage permission to change them.',
     description: 'Shown to users without manage permission',
+  },
+  nameHint: {
+    id: 'LocalizationForm.nameHint',
+    defaultMessage: 'Shown in the Localizations list only.',
+    description: 'Hint for the name of a translation set',
+  },
+  entriesHint: {
+    id: 'LocalizationForm.entriesHint',
+    defaultMessage:
+      'Each notification is triggered by a commercetools message type and uses the texts of that type. Every text becomes a variable in the templates of that notification.',
+    description: 'Explains the message type groups',
+  },
+  entryKeyUnused: {
+    id: 'LocalizationForm.entryKeyUnused',
+    defaultMessage:
+      'No notification uses this message type, so its texts are never sent.',
+    description: 'Hint under a message type that no notification uses',
+  },
+  entryNameHint: {
+    id: 'LocalizationForm.entryNameHint',
+    defaultMessage: 'For your reference only.',
+    description: 'Hint for the name of a message type group',
+  },
+  valueKeyHint: {
+    id: 'LocalizationForm.valueKeyHint',
+    defaultMessage: 'Templates use it as {token}.',
+    description: 'Hint for the variable name of a text',
   },
 });

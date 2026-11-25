@@ -16,7 +16,7 @@ import {
   Stack,
 } from '@commercetools/nimbus';
 import { Add } from '@commercetools/nimbus-icons';
-import { PERMISSIONS, CONTAINER_KEY } from '../../constants';
+import { PERMISSIONS, CONTAINER_KEY, LOCALIZATIONS_KEY } from '../../constants';
 import { useCustomObjectsFetcher } from '../../hooks/use-custom-object-connector/use-custom-object-connector';
 import { TCustomObject } from '../../types/generated/ctp';
 import { castValue, getErrorMessage } from '../../helpers';
@@ -62,6 +62,14 @@ const LocalizationList: FC = () => {
           }
         ),
     },
+    {
+      id: 'used',
+      header: intl.formatMessage(messages.columnUsed),
+      accessor: (row) =>
+        intl.formatMessage(
+          row.key === LOCALIZATIONS_KEY ? messages.used : messages.unused
+        ),
+    },
   ];
 
   const closeAndRefresh = () => {
@@ -76,7 +84,9 @@ const LocalizationList: FC = () => {
           {intl.formatMessage(messages.title)}
         </DefaultPage.Title>
         <DefaultPage.Subtitle>
-          {intl.formatMessage(messages.subTitle)}
+          {intl.formatMessage(messages.subTitle, {
+            token: '{{messages.<name>}}',
+          })}
         </DefaultPage.Subtitle>
         <DefaultPage.Actions>
           {canManage && (

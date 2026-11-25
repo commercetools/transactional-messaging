@@ -9,28 +9,43 @@ export default defineMessages({
   subTitle: {
     id: 'LocalizationList.subTitle',
     defaultMessage:
-      'Translate the texts used in emails and SMS messages. Choose a row to edit it.',
+      'Translated texts that templates use as {token}. Notifications read only the set with the key transactional-emails.',
     description: 'Subtitle of the localization list',
   },
   addButton: {
     id: 'LocalizationList.addButton',
-    defaultMessage: 'Add localization',
+    defaultMessage: 'New translation set',
     description: 'Button to create a localization',
   },
   missingConfiguration: {
     id: 'LocalizationList.missingConfiguration',
     defaultMessage:
-      'No localizations yet. Add one to translate the texts used in messages.',
+      'No translations yet. Create a set with the key transactional-emails; until then, notifications use the built-in texts.',
     description: 'Shown when there are no localizations',
   },
   columnKey: {
     id: 'LocalizationList.columnKey',
-    defaultMessage: 'Key',
+    defaultMessage: 'Set key',
     description: 'Column header for the key',
   },
   columnName: {
     id: 'LocalizationList.columnName',
-    defaultMessage: 'Name',
+    defaultMessage: 'Set name',
     description: 'Column header for the name',
+  },
+  columnUsed: {
+    id: 'LocalizationList.columnUsed',
+    defaultMessage: 'Used by notifications',
+    description: 'Column header: whether the connector reads this set',
+  },
+  used: {
+    id: 'LocalizationList.used',
+    defaultMessage: 'Yes',
+    description: 'The connector reads this set',
+  },
+  unused: {
+    id: 'LocalizationList.unused',
+    defaultMessage: 'No',
+    description: 'The connector ignores this set',
   },
 });
