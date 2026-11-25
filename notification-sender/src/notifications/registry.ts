@@ -2,7 +2,7 @@ import type { NotificationKey } from './keys';
 
 export * from './keys';
 
-/** One place that maps commercetools message types to notification keys (plan Phase 7 §7.2). */
+/** One place that maps commercetools message types to notification keys. */
 export const NOTIFICATION_BY_MESSAGE_TYPE: Readonly<Record<string, NotificationKey>> = {
   CustomerCreated: 'customer-registration',
   CustomerPasswordTokenCreated: 'customer-password-reset',

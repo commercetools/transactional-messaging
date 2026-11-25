@@ -22,7 +22,7 @@ export type ChannelConfiguration = {
     apiKeySecret: string;
     messagingServiceSid?: string;
     fromNumber?: string;
-    /** Optional boolean Custom Field name; when set, SMS requires consent (plan §7.8). */
+    /** Optional boolean Custom Field name; when set, SMS requires consent. */
     consentCustomField?: string;
     /** SMS texts are SendGrid templates, so SMS needs a SendGrid key even without the email channel. */
     templates: { apiKey: string; dataResidency: 'global' | 'eu' };
@@ -100,7 +100,7 @@ const checkFormat = (
 };
 
 /**
- * Reads the email and SMS channel configuration (plan Phase 6 §6.5).
+ * Reads the email and SMS channel configuration.
  * Each channel is optional, but at least one must be complete. Partially configured channels fail
  * at startup, naming the missing keys. Error messages never include values.
  */

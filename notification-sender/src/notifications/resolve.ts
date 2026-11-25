@@ -6,7 +6,7 @@ export type EmailResolution =
   | { type: 'skip'; reason: 'disabled' | 'no-template' };
 
 /**
- * Email rules (plan §7.5):
+ * Email rules:
  *  Merchant template exists and enabled  → send with its SendGrid template id
  *  Merchant template exists and disabled → no email
  *  No merchant template                  → no email

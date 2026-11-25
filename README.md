@@ -1,10 +1,12 @@
 # transactional-messaging
 
-Your commercetools shop sends order confirmations, shipping updates, return notices and account emails, by email and now by SMS. Merchandisers design the email and SMS templates, choose which template each message uses, switch each message on or off, and edit translations in the Merchant Center, without a deployment.
+Send the messages a shop owes its customers (order confirmations, shipping and status updates, return notices, welcome and password reset emails) by email through Twilio SendGrid and by SMS through Twilio, straight from your commercetools Project.
 
-This is a commercetools-labs project: freely available, shared as-is, and not supported by commercetools. See [SUPPORT.md](./SUPPORT.md).
+It is for commercetools teams who want transactional email and SMS without building the plumbing or asking a developer for every wording change. A Connect application listens to commercetools messages and sends the notification. A Merchant Center application gives merchandisers the rest: they design email templates in MJML with a live preview and sample data, write SMS texts, reuse blocks such as headers and footers across templates, choose which template each notification uses, switch channels on or off, and translate the texts, all without a deployment.
 
-<!-- Screenshots (Merchant Center Templates page, and a received SMS) are added before publication. -->
+When it runs, a customer who places an order gets a confirmation email with their line items and shipping address, in their language, and an SMS if they gave a mobile number and you enabled SMS.
+
+This is a commercetools-labs project: freely available and shared as-is, and it is unsupported, so commercetools support does not cover it. See [SUPPORT.md](./SUPPORT.md).
 
 ## How it works
 
@@ -87,8 +89,6 @@ These are the keys in [connect.yaml](./connect.yaml). The configuration is set i
 Connect sets the application URL of notification-manager (`APPLICATION_URL`) and the `CTP_*` API client itself; they are not in `connect.yaml`. The `*_DEV_*` settings in the `.env.example` files are for local development only and are refused in a deployment.
 
 At least one channel must be complete: email (`SENDGRID_API_KEY` and `SENDER_EMAIL_ADDRESS`), or SMS (the three Twilio credentials, a sender, and `SENDGRID_API_KEY` for the texts). A partly configured channel stops the connector at startup, and the error names the missing key.
-
-Upgrading from an earlier version: `EMAIL_PROVIDER_API_KEY` is now `SENDGRID_API_KEY`.
 
 ## Scopes
 

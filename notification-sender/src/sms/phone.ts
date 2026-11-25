@@ -12,7 +12,7 @@ const candidatesFrom = (address?: Address): Candidate[] =>
     : [];
 
 /**
- * Normalises the recipient's mobile number to E.164 (plan §7.7).
+ * Normalises the recipient's mobile number to E.164.
  * Order: order shipping, order billing, customer default shipping, then any customer address.
  * Within an address, `mobile` is preferred over `phone`. Invalid numbers are skipped.
  */

@@ -6,7 +6,7 @@ import type { EmailProvider, SmsProvider, SmsTemplateSource } from './types';
 
 export type Providers = { email?: EmailProvider; sms?: SmsProvider; smsTemplates?: SmsTemplateSource };
 
-/** Per-call budget for each provider (plan §6.4): the event must be acknowledged within about 10 seconds. */
+/** Per-call budget for each provider: the event must be acknowledged within about 10 seconds. */
 const PROVIDER_TIMEOUT_MS = 4000;
 
 let cached: Providers | undefined;

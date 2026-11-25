@@ -1,6 +1,6 @@
 # notification-manager
 
-The Merchant Center custom application of transactional-messaging. Merchants use it to design **Templates** (email as MJML, SMS as text, both stored in SendGrid), choose the template each notification sends in **Mappings**, and manage **Localizations**: translated texts, grouped by message type, used as `{{messages.<name>}}`. It is built with React 19, [Nimbus](https://docs.commercetools.com/merchant-center-customizations/development/nimbus) and the Merchant Center application kit. The root [README](../README.md) describes how it is deployed with Connect.
+The Merchant Center custom application of transactional-messaging. Merchants use it to design **Templates** (email as MJML and SMS as text, both stored in SendGrid, plus reusable MJML parts), choose the template each notification sends in **Mappings**, and manage **Localizations**: translated texts, grouped by message type, used as `{{messages.<name>}}`. It is built with React 19, [Nimbus](https://docs.commercetools.com/merchant-center-customizations/development/nimbus) and the Merchant Center application kit. The root [README](../README.md) describes how it is deployed with Connect.
 
 ## Local development
 
