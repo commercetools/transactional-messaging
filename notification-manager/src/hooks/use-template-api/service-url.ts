@@ -13,3 +13,22 @@ export const urlOf = (value: unknown): string | undefined => {
     return undefined;
   }
 };
+
+declare const window: Window &
+  typeof globalThis & { app?: { templateApiDevUrl?: string } };
+
+/**
+ * Local development only: when TEMPLATE_API_DEV_URL is set in .env, the app calls the service at that
+ * localhost address directly instead of through the Merchant Center proxy. Ignored in a production build.
+ */
+export const devServiceUrl = (): string | undefined => {
+  if (process.env.NODE_ENV === 'production' || typeof window === 'undefined')
+    return undefined;
+  const url = urlOf({ url: window.app?.templateApiDevUrl });
+  if (!url?.startsWith('http://')) return undefined;
+  // The service answers under its Connect endpoint path, so a bare host:port gets it added.
+  const parsed = new URL(url);
+  return parsed.pathname === '/'
+    ? `${parsed.origin}/templateApi`
+    : url.replace(/\/+$/, '');
+};

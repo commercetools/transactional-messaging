@@ -17,6 +17,19 @@ const PERMISSIONS = toPermissionKeys(
   process.env.ENTRY_POINT_URI_PATH ?? 'placeholder'
 );
 
+// Local development only: call the template service at this localhost URL directly, without the
+// Merchant Center proxy (which refuses http). A production build, as Connect runs it, never uses it.
+const isProduction =
+  (process.env.MC_APP_ENV ?? process.env.NODE_ENV ?? 'development') ===
+  'production';
+const devUrl = process.env.TEMPLATE_API_DEV_URL?.trim();
+const templateApiDevUrl =
+  !isProduction &&
+  devUrl &&
+  /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/.test(devUrl)
+    ? devUrl
+    : undefined;
+
 /** @type {import('@commercetools-frontend/application-config').ConfigOptionsForCustomApplication} */
 const config = {
   name: 'Transactional Messaging',
@@ -33,13 +46,17 @@ const config = {
       url: '${env:APPLICATION_URL}',
     },
   },
+  additionalEnv: templateApiDevUrl ? { templateApiDevUrl } : {},
   oAuthScopes: {
     view: ['view_key_value_documents'],
     manage: ['manage_key_value_documents'],
   },
   headers: {
     csp: {
-      'connect-src': [],
+      // The dev service is called straight from the browser, so the page may connect to it.
+      'connect-src': templateApiDevUrl
+        ? [new URL(templateApiDevUrl).origin]
+        : [],
       'script-src': ["'unsafe-inline'", "'unsafe-eval'"],
     },
   },

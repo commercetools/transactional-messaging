@@ -3,7 +3,7 @@ import { useCustomObjectFetcher } from '../use-custom-object-connector/use-custo
 import { createTemplateApi, type TemplateApi } from '../../api/template-api';
 import { SERVICE_CONFIG_CONTAINER, SERVICE_CONFIG_KEY } from '../../constants';
 import { getErrorMessage } from '../../helpers';
-import { urlOf } from './service-url';
+import { devServiceUrl, urlOf } from './service-url';
 
 export type TemplateApiState =
   | { status: 'loading' }
@@ -18,9 +18,15 @@ export const useTemplateApi = (): TemplateApiState => {
     container: SERVICE_CONFIG_CONTAINER,
     key: SERVICE_CONFIG_KEY,
   });
-  const url = urlOf(customObject?.value);
-  const api = useMemo(() => (url ? createTemplateApi(url) : undefined), [url]);
+  const devUrl = devServiceUrl();
+  const url = devUrl ?? urlOf(customObject?.value);
+  const api = useMemo(
+    () =>
+      url ? createTemplateApi(url, { direct: Boolean(devUrl) }) : undefined,
+    [url, devUrl]
+  );
 
+  if (devUrl && api) return { status: 'ready', api };
   if (loading) return { status: 'loading' };
   if (error) return { status: 'error', message: getErrorMessage(error) };
   if (!api) return { status: 'missing' };

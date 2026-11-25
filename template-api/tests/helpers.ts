@@ -9,6 +9,7 @@ export const CONFIG: ServiceConfiguration = {
   cloudIdentifier: 'gcp-eu',
   entryPointUriPath: 'acme-transactional-messaging',
   audience: 'https://service.example.com',
+  devMode: false,
 };
 
 export const TEMPLATE_ID = 'd-0123456789abcdef0123456789abcdef';
@@ -25,7 +26,11 @@ export const fakeGateway = (): jest.Mocked<TemplateGateway> => ({
 export const withSession =
   (userPermissions: string[]): RequestHandler =>
   (req: Request, _res: Response, next: NextFunction) => {
-    req.session = { userId: 'user-1', projectKey: 'test-project', userPermissions };
+    req.session = {
+      userId: 'user-1',
+      projectKey: 'test-project',
+      userPermissions,
+    };
     next();
   };
 

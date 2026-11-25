@@ -25,7 +25,6 @@ const emailChannel = {
   apiKey: 'SG.secret-key',
   from: 'shop@example.com',
   dataResidency: 'global' as const,
-  fallbackTemplateIds: {},
 };
 const smsChannel = {
   accountSid: 'AC' + 'a'.repeat(32),

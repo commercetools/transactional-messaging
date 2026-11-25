@@ -56,11 +56,7 @@ const runChannel = async (
 };
 
 const sendEmail = async (context: NotificationContext, deps: DispatchDependencies): Promise<ChannelOutcome> => {
-  const resolution = resolveEmailTemplate(
-    context.notification,
-    deps.templates,
-    deps.channels.email?.fallbackTemplateIds ?? {}
-  );
+  const resolution = resolveEmailTemplate(context.notification, deps.templates);
   if (resolution.type === 'skip') return { channel: 'email', status: 'skipped', reason: resolution.reason };
 
   const provider = deps.providers.email;

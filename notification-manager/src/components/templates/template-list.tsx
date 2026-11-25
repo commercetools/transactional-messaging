@@ -24,7 +24,11 @@ import {
 import { Add } from '@commercetools/nimbus-icons';
 import { MAPPINGS_CONTAINER } from '../../shared/mappings/notification-mapping';
 import type { TemplateApi, TemplateSummary } from '../../api/template-api';
-import { PERMISSIONS, TEMPLATE_SOURCES_CONTAINER } from '../../constants';
+import {
+  PERMISSIONS,
+  TEMPLATE_PARTS_CONTAINER,
+  TEMPLATE_SOURCES_CONTAINER,
+} from '../../constants';
 import { getErrorMessage } from '../../helpers';
 import { useAsync } from '../../hooks/use-template-api/use-async';
 import { useTemplateApi } from '../../hooks/use-template-api/use-template-api';
@@ -33,13 +37,31 @@ import {
   useCustomObjectsFetcher,
 } from '../../hooks/use-custom-object-connector/use-custom-object-connector';
 import { parseTemplateSource } from '../../templates/template-source';
+import {
+  includedKeys,
+  parsePart,
+  partsIncluding,
+  type TemplatePart,
+} from '../../templates/parts';
 import { NOTIFICATION_LABELS } from '../mappings/mapping-helpers';
 import messages from './messages';
-import { mappedTemplateIds } from './template-helpers';
+import { mappedTemplateIds, type TemplateKind } from './template-helpers';
+import PartEdit from './part-edit';
 import TemplateCreate from './template-create';
 import TemplateEdit from './template-edit';
+import type { TemplateLibrary } from './use-part-save';
 
-type Row = TemplateSummary & { id: string };
+type Row = Omit<TemplateSummary, 'channel'> & {
+  channel: TemplateKind;
+  /** Set for parts, which are Custom Objects rather than SendGrid templates. */
+  part?: TemplatePart;
+};
+
+const TYPE_LABELS = {
+  email: messages.typeEmail,
+  sms: messages.typeSms,
+  part: messages.typePart,
+} as const;
 
 const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
   const intl = useIntl();
@@ -56,6 +78,10 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
   const [templates, reload] = useAsync(load);
   const sources = useCustomObjectsFetcher({
     container: TEMPLATE_SOURCES_CONTAINER,
+    limit: 500,
+  });
+  const partObjects = useCustomObjectsFetcher({
+    container: TEMPLATE_PARTS_CONTAINER,
     limit: 500,
   });
   const mappings = useCustomObjectsFetcher({
@@ -77,6 +103,30 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
       ),
     [sources.customObjectsPaginatedResult]
   );
+  const parts = useMemo(
+    () =>
+      (partObjects.customObjectsPaginatedResult?.results ?? [])
+        .map((object) =>
+          parsePart(object.key, object.value, object.lastModifiedAt)
+        )
+        .filter((part): part is TemplatePart => part !== undefined),
+    [partObjects.customObjectsPaginatedResult]
+  );
+  const library: TemplateLibrary = useMemo(
+    () => ({
+      parts,
+      mjmlById: new Map(
+        [...sourceById].map(([id, source]) => [id, source?.mjml])
+      ),
+      nameById: new Map(
+        (templates.status === 'ready' ? templates.data : []).map((template) => [
+          template.id,
+          template.name,
+        ])
+      ),
+    }),
+    [parts, sourceById, templates]
+  );
   const usedIds = useMemo(
     () =>
       mappedTemplateIds(mappings.customObjectsPaginatedResult?.results ?? []),
@@ -96,11 +146,47 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
   const closeAndRefresh = () => {
     reload();
     void sources.refetch();
+    void partObjects.refetch();
     history.push(match.url);
+  };
+
+  /** Templates and parts that include a part directly; it cannot be deleted while there are any. */
+  const partUsers = (key: string): number =>
+    [...library.mjmlById.values()].filter(
+      (mjml) => mjml !== undefined && includedKeys(mjml).includes(key)
+    ).length + partsIncluding(key, parts).length;
+
+  const deletePart = async (part: TemplatePart) => {
+    let failure: string | undefined;
+    try {
+      await deleter.execute({
+        container: TEMPLATE_PARTS_CONTAINER,
+        key: part.key,
+        onError(message?: string) {
+          failure = message ?? 'Unknown error';
+        },
+      });
+    } catch (error) {
+      failure = error instanceof Error ? error.message : String(error);
+    }
+    if (failure !== undefined) {
+      notify(
+        'error',
+        intl.formatMessage(messages.deleteError, { message: failure })
+      );
+      throw new Error(failure);
+    }
+    notify('success', intl.formatMessage(messages.deleteSuccess));
+    setPendingDelete(undefined);
+    void partObjects.refetch();
   };
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
+    if (pendingDelete.part) {
+      await deletePart(pendingDelete.part);
+      return;
+    }
     try {
       await api.remove(pendingDelete.id);
     } catch (error) {
@@ -127,7 +213,20 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
     void sources.refetch();
   };
 
-  const rows: Row[] = templates.status === 'ready' ? templates.data : [];
+  const rows: Row[] =
+    templates.status === 'ready'
+      ? [
+          ...templates.data,
+          ...parts.map((part) => ({
+            // Prefixed, so a part key can never collide with a SendGrid ID in the table.
+            id: `part:${part.key}`,
+            name: part.name,
+            channel: 'part' as const,
+            updatedAt: part.updatedAt ?? '',
+            part,
+          })),
+        ]
+      : [];
 
   const columns: DataTableColumnItem<Row>[] = [
     {
@@ -138,15 +237,14 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
     {
       id: 'channel',
       header: intl.formatMessage(messages.columnType),
-      accessor: (row) =>
-        intl.formatMessage(
-          row.channel === 'sms' ? messages.typeSms : messages.typeEmail
-        ),
+      accessor: (row) => intl.formatMessage(TYPE_LABELS[row.channel]),
     },
     {
       id: 'notification',
       header: intl.formatMessage(messages.columnNotification),
       accessor: (row) => {
+        if (row.part)
+          return intl.formatMessage(NOTIFICATION_LABELS[row.part.notification]);
         const source = sourceById.get(row.id);
         return source
           ? intl.formatMessage(NOTIFICATION_LABELS[source.notification])
@@ -169,10 +267,16 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
           <Button
             size="xs"
             variant="outline"
-            onPress={() => history.push(`${match.url}/${row.id}`)}
+            onPress={() =>
+              history.push(
+                row.part
+                  ? `${match.url}/parts/${encodeURIComponent(row.part.key)}`
+                  : `${match.url}/${row.id}`
+              )
+            }
           >
             {intl.formatMessage(
-              canManage && sourceById.has(row.id)
+              canManage && (row.part || sourceById.has(row.id))
                 ? messages.edit
                 : messages.view
             )}
@@ -192,7 +296,29 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
     },
   ];
 
-  const blocked = pendingDelete ? usedIds.has(pendingDelete.id) : false;
+  const partUserCount = pendingDelete?.part
+    ? partUsers(pendingDelete.part.key)
+    : 0;
+  const blocked = pendingDelete
+    ? pendingDelete.part
+      ? partUserCount > 0
+      : usedIds.has(pendingDelete.id)
+    : false;
+  const deleteText = () => {
+    const name = pendingDelete?.name ?? '';
+    if (pendingDelete?.part) {
+      return blocked
+        ? intl.formatMessage(messages.partDeleteBlocked, {
+            name,
+            count: partUserCount,
+          })
+        : intl.formatMessage(messages.partDeleteBody, { name });
+    }
+    return intl.formatMessage(
+      blocked ? messages.deleteBlocked : messages.deleteBody,
+      { name }
+    );
+  };
 
   return (
     <DefaultPage.Root>
@@ -226,6 +352,13 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
               </Alert.Description>
             </Alert.Root>
           )}
+          {partObjects.error && (
+            <Alert.Root colorPalette="critical">
+              <Alert.Description>
+                {getErrorMessage(partObjects.error)}
+              </Alert.Description>
+            </Alert.Root>
+          )}
           {sources.error && (
             <Alert.Root colorPalette="critical">
               <Alert.Description>
@@ -253,10 +386,27 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
         </Stack>
         <Switch>
           <Route path={`${match.path}/new`}>
-            <TemplateCreate api={api} onClose={closeAndRefresh} />
+            <TemplateCreate
+              api={api}
+              library={library}
+              onClose={closeAndRefresh}
+            />
+          </Route>
+          {/* Before :id, which loads from SendGrid and would not find a part. */}
+          <Route path={`${match.path}/parts/:key`}>
+            <PartEdit
+              api={api}
+              library={library}
+              loading={partObjects.loading || sources.loading}
+              onClose={closeAndRefresh}
+            />
           </Route>
           <Route path={`${match.path}/:id`}>
-            <TemplateEdit api={api} onClose={closeAndRefresh} />
+            <TemplateEdit
+              api={api}
+              library={library}
+              onClose={closeAndRefresh}
+            />
           </Route>
         </Switch>
         <ConfirmationDialog
@@ -272,12 +422,7 @@ const TemplateTable: FC<{ api: TemplateApi }> = ({ api }) => {
           onConfirm={confirmDelete}
           onCancel={() => setPendingDelete(undefined)}
         >
-          <Text>
-            {intl.formatMessage(
-              blocked ? messages.deleteBlocked : messages.deleteBody,
-              { name: pendingDelete?.name ?? '' }
-            )}
-          </Text>
+          <Text>{deleteText()}</Text>
         </ConfirmationDialog>
       </DefaultPage.Content>
     </DefaultPage.Root>

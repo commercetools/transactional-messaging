@@ -32,7 +32,6 @@ describe('readChannelConfiguration', () => {
       apiKey: 'SG.key',
       from: 'shop@example.com',
       dataResidency: 'global',
-      fallbackTemplateIds: {},
     });
     expect(config.sms).toBeUndefined();
   });
@@ -44,6 +43,7 @@ describe('readChannelConfiguration', () => {
   });
 
   it('requires a SendGrid key for SMS, whose texts are SendGrid templates', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { SENDGRID_API_KEY: _omit, ...smsWithoutKey } = sms;
     expect(problemsOf({ ...base, ...smsWithoutKey })).toContain(
       'SENDGRID_API_KEY is required for the SMS channel, because SMS templates are read from SendGrid'
@@ -114,15 +114,13 @@ describe('readChannelConfiguration', () => {
     expect(JSON.stringify(problems)).not.toContain('AC-short-secret');
   });
 
-  it('reads the EU residency and the legacy template fallbacks', () => {
+  it('reads the EU residency', () => {
     const config = readChannelConfiguration({
       ...base,
       ...email,
       SENDGRID_DATA_RESIDENCY: 'eu',
-      ORDER_CONFIRMATION_TEMPLATE_ID: 'd-legacy-order',
     });
     expect(config.email?.dataResidency).toBe('eu');
-    expect(config.email?.fallbackTemplateIds).toEqual({ 'order-confirmation': 'd-legacy-order' });
   });
 
   it('reads the optional SMS consent field', () => {

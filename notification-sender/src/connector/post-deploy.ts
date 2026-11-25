@@ -7,7 +7,7 @@ import { readChannelConfiguration } from '../utils/config.utils';
 
 async function run(): Promise<void> {
   try {
-    // Fail the deployment when a configured channel cannot authenticate (plan §6.7).
+    // Fail the deployment when a configured channel cannot authenticate.
     await validateProviders(readChannelConfiguration());
     const destination = buildDestination(process.env);
     const outcome = await ensureSubscription(createApiRoot(), destination);

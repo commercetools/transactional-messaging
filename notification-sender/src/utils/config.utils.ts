@@ -1,6 +1,4 @@
 import CustomError from '../errors/custom.error';
-import type { NotificationKey } from '../notifications/keys';
-import { LEGACY_EMAIL_TEMPLATE_ENV, NOTIFICATION_KEYS } from '../notifications/registry';
 
 export type Configuration = {
   projectKey: string;
@@ -17,8 +15,6 @@ export type ChannelConfiguration = {
     apiKey: string;
     from: string;
     dataResidency: 'global' | 'eu';
-    /** Legacy SendGrid template IDs, used only when no Merchant Center template exists (D9). */
-    fallbackTemplateIds: Partial<Record<NotificationKey, string>>;
   };
   sms?: {
     accountSid: string;
@@ -26,7 +22,7 @@ export type ChannelConfiguration = {
     apiKeySecret: string;
     messagingServiceSid?: string;
     fromNumber?: string;
-    /** Optional boolean Custom Field name; when set, SMS requires consent (plan §7.8). */
+    /** Optional boolean Custom Field name; when set, SMS requires consent. */
     consentCustomField?: string;
     /** SMS texts are SendGrid templates, so SMS needs a SendGrid key even without the email channel. */
     templates: { apiKey: string; dataResidency: 'global' | 'eu' };
@@ -104,7 +100,7 @@ const checkFormat = (
 };
 
 /**
- * Reads the email and SMS channel configuration (plan Phase 6 §6.5).
+ * Reads the email and SMS channel configuration.
  * Each channel is optional, but at least one must be complete. Partially configured channels fail
  * at startup, naming the missing keys. Error messages never include values.
  */
@@ -180,19 +176,12 @@ export const readChannelConfiguration = (env: NodeJS.ProcessEnv = process.env): 
     );
   }
 
-  const fallbackTemplateIds: Partial<Record<NotificationKey, string>> = {};
-  for (const key of NOTIFICATION_KEYS) {
-    const id = optionalEnv(env, LEGACY_EMAIL_TEMPLATE_ENV[key]);
-    if (id) fallbackTemplateIds[key] = id;
-  }
-
   const configuration: ChannelConfiguration = { defaultLocale: defaultLocale as string };
   if (emailEnabled) {
     configuration.email = {
       apiKey: sendGridApiKey as string,
       from: senderEmail as string,
       dataResidency,
-      fallbackTemplateIds,
     };
   }
   if (smsEnabled) {

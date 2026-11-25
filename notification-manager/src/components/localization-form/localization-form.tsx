@@ -5,10 +5,12 @@ import { useApplicationContext } from '@commercetools-frontend/application-shell
 import {
   Box,
   Button,
+  FormField,
   IconButton,
   LocalizedField,
   type LocalizedFieldChangeEvent,
   ModalPage,
+  Select,
   SimpleGrid,
   Stack,
   Text,
@@ -17,7 +19,12 @@ import {
 import { Add, Delete } from '@commercetools/nimbus-icons';
 import { Localizations } from '../../types';
 import { createLocalizedString } from '../../utils/localized-string';
+import { NOTIFICATION_KEYS } from '../../shared/notifications/keys';
+import { MESSAGE_TYPE } from '../../templates/variables';
+import { NOTIFICATION_LABELS } from '../mappings/mapping-helpers';
 import messages from './messages';
+
+const MESSAGE_TYPES = [...new Set(Object.values(MESSAGE_TYPE))];
 
 export const KEY_PATTERN = /^[a-zA-Z0-9-_]+$/;
 
@@ -51,6 +58,11 @@ const LocalizationForm: FC<Props> = ({
   title,
 }) => {
   const intl = useIntl();
+  /** "OrderCreated · Order confirmation": the type and the notifications that read its texts. */
+  const notificationsOf = (type: string): string =>
+    NOTIFICATION_KEYS.filter((key) => MESSAGE_TYPE[key] === type)
+      .map((key) => intl.formatMessage(NOTIFICATION_LABELS[key]))
+      .join(', ');
   const { dataLocale, projectLanguages } = useApplicationContext((context) => ({
     dataLocale: context.dataLocale ?? '',
     projectLanguages: context.project?.languages ?? [],
@@ -82,6 +94,23 @@ const LocalizationForm: FC<Props> = ({
 
   const readOnly = !canManage;
   const entries = formik.values.entries ?? [];
+  /**
+   * The known message types that no other group uses yet. A type the group already has stays listed even if
+   * it is not a known one, so older data is shown as it is.
+   */
+  const typeOptions = (entryIndex: number): string[] => {
+    const taken = new Set(
+      entries
+        .filter((_, index) => index !== entryIndex)
+        .map((entry) => entry.key)
+    );
+    const own = entries[entryIndex]?.key;
+    const options = MESSAGE_TYPES.filter((type) => !taken.has(type));
+    return own && !options.includes(own) ? [own, ...options] : options;
+  };
+  const allTypesUsed = MESSAGE_TYPES.every((type) =>
+    entries.some((entry) => entry.key === type)
+  );
 
   const addEntry = () =>
     formik.setFieldValue('entries', [
@@ -156,6 +185,7 @@ const LocalizationForm: FC<Props> = ({
             <LocalizedField
               type="text"
               label={intl.formatMessage(messages.nameTitle)}
+              description={intl.formatMessage(messages.nameHint)}
               defaultLocaleOrCurrency={dataLocale}
               valuesByLocaleOrCurrency={formik.values.name ?? {}}
               onChange={localizedChange('name')}
@@ -169,6 +199,9 @@ const LocalizationForm: FC<Props> = ({
               <Text fontWeight="bold">
                 {intl.formatMessage(messages.entriesTitle)}
               </Text>
+              <Text fontSize="sm" color="neutral.11">
+                {intl.formatMessage(messages.entriesHint)}
+              </Text>
               <SimpleGrid columns={{ base: 1, xl: 2 }} gap="600">
                 {entries.map((entry, entryIndex) => (
                   <Box
@@ -181,17 +214,42 @@ const LocalizationForm: FC<Props> = ({
                     <Stack direction="column" gap="400">
                       <Stack direction="row" gap="400" alignItems="flex-end">
                         <Box flex="1">
-                          <TextInputField
-                            label={intl.formatMessage(messages.entryKeyTitle)}
-                            value={entry.key}
-                            onChange={(value: string) => {
-                              void formik.setFieldValue(
-                                `entries.${entryIndex}.key`,
-                                value
-                              );
-                            }}
-                            isDisabled={readOnly}
-                          />
+                          <FormField.Root isRequired isDisabled={readOnly}>
+                            <FormField.Label>
+                              {intl.formatMessage(messages.entryKeyTitle)}
+                            </FormField.Label>
+                            <FormField.Input>
+                              <Select.Root
+                                aria-label={intl.formatMessage(
+                                  messages.entryKeyTitle
+                                )}
+                                placeholder="—"
+                                selectedKey={entry.key || null}
+                                isDisabled={readOnly}
+                                onSelectionChange={(key) => {
+                                  void formik.setFieldValue(
+                                    `entries.${entryIndex}.key`,
+                                    String(key)
+                                  );
+                                }}
+                              >
+                                <Select.Options>
+                                  {typeOptions(entryIndex).map((type) => (
+                                    <Select.Option key={type} id={type}>
+                                      {notificationsOf(type)
+                                        ? `${type} · ${notificationsOf(type)}`
+                                        : type}
+                                    </Select.Option>
+                                  ))}
+                                </Select.Options>
+                              </Select.Root>
+                            </FormField.Input>
+                            {entry.key && !notificationsOf(entry.key) && (
+                              <FormField.Description>
+                                {intl.formatMessage(messages.entryKeyUnused)}
+                              </FormField.Description>
+                            )}
+                          </FormField.Root>
                         </Box>
                         <IconButton
                           variant="ghost"
@@ -206,6 +264,7 @@ const LocalizationForm: FC<Props> = ({
                       <LocalizedField
                         type="text"
                         label={intl.formatMessage(messages.entryNameTitle)}
+                        description={intl.formatMessage(messages.entryNameHint)}
                         defaultLocaleOrCurrency={dataLocale}
                         valuesByLocaleOrCurrency={entry.name ?? {}}
                         onChange={localizedChange(`entries.${entryIndex}.name`)}
@@ -223,6 +282,14 @@ const LocalizationForm: FC<Props> = ({
                           <Box flex="1">
                             <TextInputField
                               label={intl.formatMessage(messages.valueKeyTitle)}
+                              description={intl.formatMessage(
+                                messages.valueKeyHint,
+                                {
+                                  token: `{{messages.${
+                                    value.key || '<name>'
+                                  }}}`,
+                                }
+                              )}
                               value={value.key}
                               onChange={(next: string) => {
                                 void formik.setFieldValue(
@@ -278,7 +345,7 @@ const LocalizationForm: FC<Props> = ({
               <Box>
                 <Button
                   variant="outline"
-                  isDisabled={readOnly}
+                  isDisabled={readOnly || allTypesUsed}
                   onPress={addEntry}
                 >
                   <Add /> {intl.formatMessage(messages.addEntry)}

@@ -6,16 +6,23 @@ import {
 import type { TemplateInput } from '../../api/template-api';
 import { parseNotificationMapping } from '../../shared/mappings/notification-mapping';
 import { renderHandlebars } from '../../templates/preview';
+import { resolveIncludes } from '../../templates/parts';
 
 /** SendGrid allows 100 characters; SMS templates lose 6 to the "[SMS] " prefix the service adds. */
 export const NAME_MAX_LENGTH = 94;
 
+/**
+ * What the form edits: a sendable template (a channel) or a part. Parts are Merchant Center only, so 'part'
+ * stays out of the shared Channel type the sender uses.
+ */
+export type TemplateKind = Channel | 'part';
+
 export type TemplateFormValues = {
   name: string;
-  channel: Channel;
+  channel: TemplateKind;
   notification: NotificationKey | '';
   subject: string;
-  /** MJML for email, plain text for SMS. */
+  /** MJML for email and parts, plain text for SMS. Parts leave the subject empty. */
   content: string;
 };
 
@@ -42,8 +49,14 @@ export const emptyFormValues = (): TemplateFormValues => ({
   content: '',
 });
 
+/**
+ * `parts` maps each part key to its MJML. When given, the includes of an email or a part are checked, so a
+ * template that names a missing part cannot be saved.
+ */
 export const validateTemplateForm = (
-  values: TemplateFormValues
+  values: TemplateFormValues,
+  parts?: ReadonlyMap<string, string>,
+  root?: string
 ): TemplateFormErrors => {
   const errors: TemplateFormErrors = {};
   const name = values.name.trim();
@@ -72,6 +85,12 @@ export const validateTemplateForm = (
     } else if (values.content.length > SMS_MAX_LENGTH) {
       errors.content = 'smsTooLong';
     }
+  } else if (parts) {
+    const problem = resolveIncludes(values.content, parts, root).errors[0];
+    if (problem) {
+      errors.content = 'invalidTemplate';
+      errors.detail = problem;
+    }
   }
   return errors;
 };
@@ -83,7 +102,7 @@ export const hasFormErrors = (errors: TemplateFormErrors): boolean =>
 
 /** The body sent to the template service. `html` is the compiled MJML and is ignored for SMS. */
 export const buildTemplateInput = (
-  values: TemplateFormValues,
+  values: TemplateFormValues & { channel: Channel },
   html: string
 ): TemplateInput =>
   values.channel === 'email'

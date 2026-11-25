@@ -10,30 +10,22 @@ const emailTemplate = (enabled: boolean): NotificationMapping => ({
 });
 
 const templatesWith = (...items: Array<[string, NotificationMapping]>) => new Map(items);
-const legacy = { 'order-confirmation': 'd-legacy' };
 
 describe('resolveEmailTemplate', () => {
   it('uses an enabled merchant template', () => {
     expect(
-      resolveEmailTemplate('order-confirmation', templatesWith(['order-confirmation-email', emailTemplate(true)]), legacy)
+      resolveEmailTemplate('order-confirmation', templatesWith(['order-confirmation-email', emailTemplate(true)]))
     ).toEqual({ type: 'template', sendGridTemplateId: 'd-merchant' });
   });
 
-  it('sends nothing when the merchant disabled the email, even if a legacy id exists', () => {
+  it('sends nothing when the merchant disabled the email', () => {
     expect(
-      resolveEmailTemplate('order-confirmation', templatesWith(['order-confirmation-email', emailTemplate(false)]), legacy)
+      resolveEmailTemplate('order-confirmation', templatesWith(['order-confirmation-email', emailTemplate(false)]))
     ).toEqual({ type: 'skip', reason: 'disabled' });
   });
 
-  it('falls back to the legacy env template when no merchant template exists', () => {
-    expect(resolveEmailTemplate('order-confirmation', new Map(), legacy)).toEqual({
-      type: 'template',
-      sendGridTemplateId: 'd-legacy',
-    });
-  });
-
-  it('sends nothing when neither exists', () => {
-    expect(resolveEmailTemplate('order-confirmation', new Map(), {})).toEqual({
+  it('sends nothing when there is no mapping', () => {
+    expect(resolveEmailTemplate('order-confirmation', new Map())).toEqual({
       type: 'skip',
       reason: 'no-template',
     });

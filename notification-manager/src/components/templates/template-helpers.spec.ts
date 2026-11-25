@@ -8,7 +8,7 @@ import {
   type TemplateFormValues,
 } from './template-helpers';
 
-const email: TemplateFormValues = {
+const email: TemplateFormValues & { channel: 'email' | 'sms' } = {
   name: 'Order confirmation',
   channel: 'email',
   notification: 'order-confirmation',
@@ -77,6 +77,46 @@ describe('validateTemplateForm', () => {
         content: 'x'.repeat(1601),
       }).content
     ).toBe('smsTooLong');
+  });
+});
+
+describe('parts in validateTemplateForm', () => {
+  const part = { ...email, channel: 'part' as const, subject: '' };
+  const parts = new Map([['footer', '<mj-section></mj-section>']]);
+
+  it('does not require a subject for a part', () => {
+    expect(
+      hasFormErrors(
+        validateTemplateForm({ ...part, content: '<mj-section/>' }, parts)
+      )
+    ).toBe(false);
+  });
+
+  it('rejects an include of a missing part, for emails and parts', () => {
+    const content = '<mj-include path="nope.mjml" />';
+    expect(validateTemplateForm({ ...email, content }, parts)).toMatchObject({
+      content: 'invalidTemplate',
+      detail: 'There is no part "nope".',
+    });
+    expect(validateTemplateForm({ ...part, content }, parts).content).toBe(
+      'invalidTemplate'
+    );
+    expect(
+      validateTemplateForm(
+        { ...email, content: '<mj-include path="footer.mjml" />' },
+        parts
+      ).content
+    ).toBeUndefined();
+  });
+
+  it('rejects a part that includes itself', () => {
+    expect(
+      validateTemplateForm(
+        { ...part, content: '<mj-include path="self.mjml" />' },
+        parts,
+        'self'
+      ).content
+    ).toBe('invalidTemplate');
   });
 });
 

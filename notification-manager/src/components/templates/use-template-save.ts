@@ -38,7 +38,10 @@ export const useTemplateSave = (api: TemplateApi, onSaved: () => void) => {
     values: TemplateFormValues,
     html: string
   ): Promise<void> => {
-    const input = buildTemplateInput(values, html);
+    const channel = values.channel;
+    if (channel === 'part')
+      throw new Error('Parts are saved with usePartSave.');
+    const input = buildTemplateInput({ ...values, channel }, html);
     let id: string;
     try {
       const saved = existingId
@@ -58,8 +61,8 @@ export const useTemplateSave = (api: TemplateApi, onSaved: () => void) => {
     const source: TemplateSource = {
       schemaVersion: 1,
       notification: values.notification as TemplateSource['notification'],
-      channel: values.channel,
-      ...(values.channel === 'email' ? { mjml: values.content } : {}),
+      channel,
+      ...(channel === 'email' ? { mjml: values.content } : {}),
     };
     let failure: string | undefined;
     try {
