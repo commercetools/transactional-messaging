@@ -1,6 +1,6 @@
 # notification-manager
 
-The Merchant Center custom application of transactional-messaging. Merchants use it to design **Templates** (email as MJML, SMS as text, both stored in SendGrid), choose the template each notification sends in **Mappings**, and manage **Localizations** (texts used as `{{messages.<key>}}`). It is built with React 19, [Nimbus](https://docs.commercetools.com/merchant-center-customizations/development/nimbus) and the Merchant Center application kit. The root [README](../README.md) describes how it is deployed with Connect.
+The Merchant Center custom application of transactional-messaging. Merchants use it to design **Templates** (email as MJML, SMS as text, both stored in SendGrid), choose the template each notification sends in **Mappings**, and manage **Localizations**: translated texts, grouped by message type, used as `{{messages.<name>}}`. It is built with React 19, [Nimbus](https://docs.commercetools.com/merchant-center-customizations/development/nimbus) and the Merchant Center application kit. The root [README](../README.md) describes how it is deployed with Connect.
 
 ## Local development
 
@@ -12,6 +12,10 @@ npm ci
 cp .env.example .env     # CUSTOM_APPLICATION_ID, ENTRY_POINT_URI_PATH, CLOUD_IDENTIFIER and INITIAL_PROJECT_KEY
 npm run start:dev        # the development server opens the Merchant Center
 ```
+
+`APPLICATION_URL` is needed only for `npm run start:prod:local`; Connect sets it in a deployment.
+
+The Templates page needs the template service. By default it uses the deployed one, whose URL is stored in the Custom Object `transactional-messaging/template-api`. To use a service on your machine instead, set `TEMPLATE_API_DEV_URL=http://localhost:8080` and start template-api in dev mode, as described in [template-api/README.md](../template-api/README.md#local-development). The setting is ignored in production builds.
 
 The application needs the **View** permission to open, and **Manage** to change templates and localizations. Without Manage, every form is read-only.
 
@@ -27,6 +31,6 @@ The application needs the **View** permission to open, and **Manage** to change 
 ## Notes
 
 - Mappings read and write Custom Objects in the `notification-mappings` container; Localizations use `localizations`. These are the same objects the connector reads.
-- Templates are read and written in SendGrid through the `template-api` service, called with the Merchant Center `forward-to` proxy. The service URL is the Custom Object `transactional-messaging/template-api`. The MJML source of each email template is kept in `notification-template-sources`. Parts (reusable MJML that templates pull in with `<mj-include>`) are kept in `notification-template-parts`; the app resolves the includes before it compiles, and saving a part recompiles and saves the templates that use it.
+- Templates are read and written in SendGrid through the `template-api` service, called with the Merchant Center `forward-to` proxy. The service URL is the Custom Object `transactional-messaging/template-api`. The MJML source of each email template is kept in `notification-template-sources`. Only the translation set with the key `transactional-emails` is read by the connector. Parts (reusable MJML that templates pull in with `<mj-include>`) are kept in `notification-template-parts`; the app resolves the includes before it compiles, and saving a part recompiles and saves the templates that use it.
 - `src/shared/` holds generated copies of the SMS renderer, the notification keys and the template schema. Don't edit them here. Edit them in `notification-sender/src`, then run `npm run sync:shared` from the repository root.
 - Don't add `@commercetools-uikit` packages. The application uses Nimbus only.

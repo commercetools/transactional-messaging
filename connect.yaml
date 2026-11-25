@@ -31,22 +31,22 @@ deployAs:
           description: Optional name of a boolean Custom Field on Customer (or Order, for guests). When set, SMS is only sent if the field is true.
           required: false
         - key: CUSTOMER_REGISTRATION_TEMPLATE_ID
-          description: Optional fallback SendGrid template ID when no email template is configured in the Merchant Center.
+          description: Legacy fallback SendGrid template ID (customer registration). Used only when there is no email mapping for the notification in the Merchant Center.
           required: false
         - key: CUSTOMER_PASSWORD_TOKEN_CREATION_TEMPLATE_ID
-          description: Optional fallback SendGrid template ID (password reset).
+          description: Legacy fallback SendGrid template ID (password reset). Used only when there is no email mapping in the Merchant Center.
           required: false
         - key: ORDER_CONFIRMATION_TEMPLATE_ID
-          description: Optional fallback SendGrid template ID (order confirmation).
+          description: Legacy fallback SendGrid template ID (order confirmation). Used only when there is no email mapping in the Merchant Center.
           required: false
         - key: ORDER_STATE_CHANGE_TEMPLATE_ID
-          description: Optional fallback SendGrid template ID (order status update).
+          description: Legacy fallback SendGrid template ID (order status update). Used only when there is no email mapping in the Merchant Center.
           required: false
         - key: SHIPMENT_STATE_CHANGE_TEMPLATE_ID
-          description: Optional fallback SendGrid template ID (shipping update).
+          description: Legacy fallback SendGrid template ID (shipping update). Used only when there is no email mapping in the Merchant Center.
           required: false
         - key: ORDER_REFUND_TEMPLATE_ID
-          description: Optional fallback SendGrid template ID (return / refund).
+          description: Legacy fallback SendGrid template ID (return / refund). Used only when there is no email mapping in the Merchant Center.
           required: false
       securedConfiguration:
         - key: SENDGRID_API_KEY
@@ -78,11 +78,11 @@ deployAs:
           required: false
           default: global
         - key: TEMPLATE_API_PUBLIC_URL
-          description: Optional. Public https URL of this service. Leave empty to use the address Connect assigns.
+          description: Optional. Public https URL of this service, used to check the Merchant Center token. Leave empty to use the address Connect assigns.
           required: false
       securedConfiguration:
         - key: SENDGRID_API_KEY
-          description: Twilio SendGrid API key with the Template Engine read and write permissions. Use the same account as the notification sender.
+          description: Twilio SendGrid API key with the Template Engine read and write permissions, used by the Merchant Center Templates page. Use the same SendGrid account as the notification sender.
           required: true
   - name: notification-manager
     applicationType: merchant-center-custom-application

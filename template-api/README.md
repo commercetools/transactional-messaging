@@ -40,13 +40,22 @@ Errors are `{ "message": "…" }`. SendGrid 401 and 403 become 502 ("the API key
 
 Connect injects `CTP_*` and `CONNECT_SERVICE_URL`. The `CTP_*` client is only used by the post-deploy script.
 
-## Develop
+Two more variables exist for local development only: `PORT` (default `8080`) and `TEMPLATE_API_DEV_MODE` (below).
+
+## Local development
 
 ```bash
-cp .env.example .env
+cp .env.example .env     # SENDGRID_API_KEY, and CTP_* only if you run the post-deploy script
 npm install
 npm test
 npm run start:dev
 ```
 
-A real token only comes from the Merchant Center, so local runs are mainly useful for the unit tests. They cover the routes, the permission checks, SendGrid paging and error mapping.
+The unit tests cover the routes, the permission checks, SendGrid paging and error mapping.
+
+A deployed service gets its token from the Merchant Center proxy, and the proxy cannot reach `localhost`. To use the Templates page against a service on your machine, turn on dev mode:
+
+1. In `template-api/.env`, set `TEMPLATE_API_DEV_MODE=true`, then run `npm run start:dev`. The service listens on `127.0.0.1:8080` only, skips the token check, and treats every caller as a user with View and Manage.
+2. In `notification-manager/.env`, set `TEMPLATE_API_DEV_URL=http://localhost:8080`, then restart `npm run start:dev`. The application calls the service directly instead of through the proxy.
+
+Dev mode answers only browser requests from the Merchant Center and from `localhost`. It refuses to start when `NODE_ENV=production` or `CONNECT_SERVICE_URL` is set, so it cannot be turned on in a Connect deployment. Your SendGrid account is real: templates you save locally are saved in SendGrid.

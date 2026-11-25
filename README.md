@@ -81,9 +81,16 @@ These are the keys in [connect.yaml](./connect.yaml). The configuration is set i
 | `SENDGRID_API_KEY` | notification-sender | yes | to enable email or SMS | SendGrid API key. Needs `mail.send` for email and `templates.read` for SMS, because SMS texts are SendGrid templates. Checked at deployment. |
 | `TWILIO_API_KEY_SID` | notification-sender | yes | to enable SMS | Twilio API Key SID (`SK…`). Checked at deployment. |
 | `TWILIO_API_KEY_SECRET` | notification-sender | yes | to enable SMS | Twilio API Key secret. |
+| `SENDGRID_API_KEY` | template-api | yes | yes | SendGrid API key with the Template Engine read and write permissions, for the Templates page. Use the same SendGrid account as the notification-sender; one key with `mail.send` and Template Engine read and write can serve both. |
+| `CLOUD_IDENTIFIER` | template-api | no | yes (default `gcp-eu`) | Same value as for notification-manager. Used to check the Merchant Center token. |
+| `ENTRY_POINT_URI_PATH` | template-api | no | yes | Same value as for notification-manager. It decides which View and Manage permissions the service checks. |
+| `SENDGRID_DATA_RESIDENCY` | template-api | no | no (default `global`) | Same value as for notification-sender. |
+| `TEMPLATE_API_PUBLIC_URL` | template-api | no | no | Public https URL of the service, used as the token audience. Leave empty to use the URL Connect assigns. |
 | `CUSTOM_APPLICATION_ID` | notification-manager | no | yes | The ID shown when you register the custom application. |
 | `CLOUD_IDENTIFIER` | notification-manager | no | yes (default `gcp-eu`) | Cloud Region of your Project, for example `gcp-eu`, `gcp-us`, `aws-eu`. |
 | `ENTRY_POINT_URI_PATH` | notification-manager | no | yes | Entry point path chosen at registration. It must be globally unique, for example `<company>-transactional-messaging`. |
+
+Connect sets the application URL of notification-manager (`APPLICATION_URL`) and the `CTP_*` API client itself; they are not in `connect.yaml`. The `*_DEV_*` settings in the `.env.example` files are for local development only and are refused in a deployment.
 
 At least one channel must be complete: email (`SENDGRID_API_KEY` and `SENDER_EMAIL_ADDRESS`), or SMS (the three Twilio credentials, a sender, and `SENDGRID_API_KEY` for the texts). A partly configured channel stops the connector at startup, and the error names the missing key.
 
@@ -98,7 +105,7 @@ Connect grants the notification-sender these scopes through `inheritAs.apiClient
 | `manage_customers` | Read the customer, and create the email verification token on registration. Creates a password reset token only when the message does not carry one. |
 | `view_orders` | Re-fetch the order from the message. |
 | `view_states` | Resolve the names of custom order states. |
-| `view_key_value_documents` | Read the mappings and translations from Custom Objects. |
+| `manage_key_value_documents` | The notification-sender reads the mappings and translations from Custom Objects. The template-api post-deploy script writes its URL to a Custom Object. |
 | `view_project_settings` | Read the project languages, for localized text. |
 | `manage_subscriptions` | Create and update the Subscription during deployment. |
 
@@ -106,7 +113,7 @@ The Merchant Center custom application uses `view_key_value_documents` and `mana
 
 ## Templates and mappings
 
-Templates live in SendGrid, for both channels, and are managed in Merchant Center → **Templates**:
+Templates are managed in Merchant Center → **Templates**. Email and SMS templates live in SendGrid; parts live in the Merchant Center:
 
 - **Email:** a SendGrid dynamic template, written as MJML with a live preview. The Merchant Center compiles the MJML and stores the HTML in SendGrid. The MJML is kept in the `notification-template-sources` Custom Objects so the template can be edited again.
 - **SMS:** a SendGrid dynamic template whose name starts with `[SMS] ` and whose text is the active version's plain text, written as Handlebars. People never type the prefix; the template service adds and removes it.
@@ -121,9 +128,26 @@ SMS texts are read from SendGrid when a message is sent and cached for five minu
 
 The template service (`template-api/`) is a Connect `service` application. The Merchant Center reaches it through the Merchant Center proxy, which signs each request. Its post-deploy script stores its URL in the `transactional-messaging / template-api` Custom Object. See [template-api/README.md](./template-api/README.md).
 
+### Translations
+
+Translated texts are managed in Merchant Center → **Localizations**. The connector reads one **translation set**, the one with the key `transactional-emails` (Custom Object `localizations` / `transactional-emails`). Without it, the built-in texts are used. Other sets are listed but not used.
+
+A set has one group of texts per **message type**, the commercetools message that triggers a notification:
+
+| Message type | Notification |
+|---|---|
+| `CustomerCreated` | Customer registration |
+| `CustomerPasswordTokenCreated` | Password reset |
+| `OrderCreated` | Order confirmation |
+| `OrderStateChanged` | Order status update |
+| `OrderShipmentStateChanged` | Shipping update |
+| `ReturnInfoAdded` | Return / refund |
+
+Each text has a **variable name** and a translation per language. A text named `trackingIntro` in the `OrderCreated` group is available to order confirmation templates as `{{messages.trackingIntro}}`, and appears in the editor's variable list. The connector picks the customer's or order's language and falls back to the other project languages. Changes apply to the next message, without a deployment. Renaming or deleting a text does not change templates that use it; the variable then renders empty.
+
 ### Variables
 
-Every template receives the variables below. Translations are available as `{{messages.<key>}}`.
+Every template receives the variables below, plus its translations as `{{messages.<name>}}`.
 
 | Notification | Variables |
 |---|---|
@@ -211,6 +235,8 @@ npm run preflight      # typecheck, tests, audit and the Connect build
 ```
 
 Run `commercetools connect validate` before a release. It needs Docker.
+
+To work on the Merchant Center application with a template service on your own machine, run template-api with `TEMPLATE_API_DEV_MODE=true` and notification-manager with `TEMPLATE_API_DEV_URL=http://localhost:8080`. The Merchant Center proxy cannot reach `localhost`, so the application then calls the service directly, without a token. See [template-api/README.md](./template-api/README.md#local-development).
 
 ## Contributing
 
