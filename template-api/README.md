@@ -34,7 +34,7 @@ Errors are `{ "message": "…" }`. SendGrid 401 and 403 become 502 ("the API key
 |---|---|---|
 | `SENDGRID_API_KEY` (secured) | yes | Needs the Template Engine read and write permissions. |
 | `CLOUD_IDENTIFIER` | yes | Shared with the Merchant Center application (`inheritAs.configuration` in `connect.yaml`), for example `gcp-eu`. |
-| `ENTRY_POINT_URI_PATH` | yes | Shared with the Merchant Center application. Decides the permission names. |
+| `ENTRY_POINT_URI_PATH` | yes | Same value as the Merchant Center application. Decides the permission names. |
 | `SENDGRID_DATA_RESIDENCY` | no | `global` (default) or `eu`. |
 | `TEMPLATE_API_PUBLIC_URL` | no | Overrides the address used as the token audience. By default the origin of `CONNECT_SERVICE_URL` is used. |
 

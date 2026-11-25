@@ -52,6 +52,9 @@ deployAs:
           description: "global (default) or eu, for SendGrid EU regional subusers."
           required: false
           default: global
+        - key: ENTRY_POINT_URI_PATH
+          description: Entry point path of the Merchant Center application. Use the same value, because it decides who may edit templates.
+          required: true
         - key: TEMPLATE_API_PUBLIC_URL
           description: Optional. Public https URL of this service, used to check the Merchant Center token. Leave empty to use the address Connect assigns.
           required: false
@@ -66,6 +69,9 @@ deployAs:
         - key: CUSTOM_APPLICATION_ID
           description: The ID shown when you register the custom application in the Merchant Center.
           required: true
+        - key: ENTRY_POINT_URI_PATH
+          description: Entry point path chosen when registering the custom application. Must be globally unique, for example <company>-transactional-messaging.
+          required: true
 inheritAs:
   configuration:
     standardConfiguration:
@@ -73,9 +79,6 @@ inheritAs:
         description: Cloud Region of your Project (for example gcp-eu, gcp-us, aws-eu).
         required: true
         default: gcp-eu
-      - key: ENTRY_POINT_URI_PATH
-        description: Entry point path to the custom application, for example <company>-transactional-messaging.
-        required: true
   apiClient:
     scopes:
       - manage_customers

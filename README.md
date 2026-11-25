@@ -63,7 +63,7 @@ Connect creates the API client from the scopes in `connect.yaml`, and creates th
 
 ## Configuration
 
-These are the keys in [connect.yaml](./connect.yaml). The configuration is set in the Connect deployment. Keys marked **shared** are declared once under `inheritAs.configuration` and passed to every application, so you set them a single time.
+These are the keys in [connect.yaml](./connect.yaml). The configuration is set in the Connect deployment. Keys marked **shared** are declared once under `inheritAs.configuration` and passed to every application, so you set them a single time. `ENTRY_POINT_URI_PATH` cannot be shared, because Connect requires the Merchant Center application to declare it; set the same value for template-api and notification-manager.
 
 | Key | Application | Secured | Required | Description |
 |---|---|---|---|---|
@@ -82,7 +82,7 @@ These are the keys in [connect.yaml](./connect.yaml). The configuration is set i
 | `TEMPLATE_API_PUBLIC_URL` | template-api | no | no | Public https URL of the service, used as the token audience. Leave empty to use the URL Connect assigns. |
 | `CUSTOM_APPLICATION_ID` | notification-manager | no | yes | The ID shown when you register the custom application. |
 | `CLOUD_IDENTIFIER` | shared | no | yes (default `gcp-eu`) | Cloud Region of your Project, for example `gcp-eu`, `gcp-us`, `aws-eu`. The Merchant Center application runs there, and template-api uses it to check the Merchant Center token. |
-| `ENTRY_POINT_URI_PATH` | shared | no | yes | Entry point path chosen when you register the custom application. It must be globally unique, for example `<company>-transactional-messaging`. template-api uses it to know which View and Manage permissions to check. |
+| `ENTRY_POINT_URI_PATH` | template-api, notification-manager | no | yes | Entry point path chosen when you register the custom application. It must be globally unique, for example `<company>-transactional-messaging`. Set the same value for both applications: template-api uses it to know which View and Manage permissions to check. |
 
 Connect sets the application URL of notification-manager (`APPLICATION_URL`) and the `CTP_*` API client itself; they are not in `connect.yaml`. The `*_DEV_*` settings in the `.env.example` files are for local development only and are refused in a deployment.
 

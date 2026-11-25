@@ -1,15 +1,17 @@
-// Starting points for new email templates, one per notification (MJML with the shared parts inlined,
-// because mjml-browser has no mj-include). They were flattened from the former templates/ tool.
+// Starting points for new email templates, one per notification. Picking a notification in the template form
+// fills the editor with its design; nothing here is sent or stored until a template is saved.
+// The header and footer are repeated in each design so that every default works on its own. To share them,
+// create them as parts and replace the copies with <mj-include path="<key>.mjml" />.
 // Variables: {{messages.*}} come from Localizations, the rest from the notification (see the variable picker).
+// Fonts are system fonts, so opening an email loads nothing from a third party.
 import type { NotificationKey } from '../shared/notifications/keys';
 
 const customerRegistration = `<mjml>
     <mj-head>
-    <mj-font name="Inter" href="https://fonts.googleapis.com/css?family=Inter&display=swap" />
     <mj-attributes>
-        <mj-text font-family="Inter, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
-        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Inter, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
-        <mj-table font-family="Inter"/>
+        <mj-text font-family="Helvetica, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
+        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Helvetica, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
+        <mj-table font-family="Helvetica, Arial, sans-serif"/>
         <mj-class name="secondary" color="#565959" display="block" />
     </mj-attributes>
     <mj-style inline="inline">
@@ -117,11 +119,10 @@ const customerRegistration = `<mjml>
 
 const customerPasswordReset = `<mjml>
     <mj-head>
-    <mj-font name="Inter" href="https://fonts.googleapis.com/css?family=Inter&display=swap" />
     <mj-attributes>
-        <mj-text font-family="Inter, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
-        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Inter, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
-        <mj-table font-family="Inter"/>
+        <mj-text font-family="Helvetica, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
+        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Helvetica, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
+        <mj-table font-family="Helvetica, Arial, sans-serif"/>
         <mj-class name="secondary" color="#565959" display="block" />
     </mj-attributes>
     <mj-style inline="inline">
@@ -229,11 +230,10 @@ const customerPasswordReset = `<mjml>
 
 const orderConfirmation = `<mjml>
     <mj-head>
-    <mj-font name="Inter" href="https://fonts.googleapis.com/css?family=Inter&display=swap" />
     <mj-attributes>
-        <mj-text font-family="Inter, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
-        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Inter, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
-        <mj-table font-family="Inter"/>
+        <mj-text font-family="Helvetica, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
+        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Helvetica, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
+        <mj-table font-family="Helvetica, Arial, sans-serif"/>
         <mj-class name="secondary" color="#565959" display="block" />
     </mj-attributes>
     <mj-style inline="inline">
@@ -436,11 +436,10 @@ const orderConfirmation = `<mjml>
 
 const orderStateChange = `<mjml>
     <mj-head>
-    <mj-font name="Inter" href="https://fonts.googleapis.com/css?family=Inter&display=swap" />
     <mj-attributes>
-        <mj-text font-family="Inter, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
-        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Inter, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
-        <mj-table font-family="Inter"/>
+        <mj-text font-family="Helvetica, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
+        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Helvetica, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
+        <mj-table font-family="Helvetica, Arial, sans-serif"/>
         <mj-class name="secondary" color="#565959" display="block" />
     </mj-attributes>
     <mj-style inline="inline">
@@ -546,11 +545,10 @@ const orderStateChange = `<mjml>
 
 const shipmentStateChange = `<mjml>
     <mj-head>
-    <mj-font name="Inter" href="https://fonts.googleapis.com/css?family=Inter&display=swap" />
     <mj-attributes>
-        <mj-text font-family="Inter, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
-        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Inter, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
-        <mj-table font-family="Inter"/>
+        <mj-text font-family="Helvetica, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
+        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Helvetica, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
+        <mj-table font-family="Helvetica, Arial, sans-serif"/>
         <mj-class name="secondary" color="#565959" display="block" />
     </mj-attributes>
     <mj-style inline="inline">
@@ -656,11 +654,10 @@ const shipmentStateChange = `<mjml>
 
 const orderRefund = `<mjml>
     <mj-head>
-    <mj-font name="Inter" href="https://fonts.googleapis.com/css?family=Inter&display=swap" />
     <mj-attributes>
-        <mj-text font-family="Inter, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
-        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Inter, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
-        <mj-table font-family="Inter"/>
+        <mj-text font-family="Helvetica, Arial, sans-serif" color="#000000" line-height="1.5" font-size="15px" font-weight="400" />
+        <mj-button background-color="#1a1a1a" color="#ffffff"  font-family="Helvetica, Arial, sans-serif"  font-size="14px" border-radius="2px" padding="10px 24px" align="left"/>
+        <mj-table font-family="Helvetica, Arial, sans-serif"/>
         <mj-class name="secondary" color="#565959" display="block" />
     </mj-attributes>
     <mj-style inline="inline">
